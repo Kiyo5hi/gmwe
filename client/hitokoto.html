@@ -1,0 +1,83 @@
+<html>
+
+<head>
+    <title>Hitokoto Pane</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #app {
+            background-color: #5DAC81;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #brief {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app">
+        <div id="brief">
+            <p>GMWE Hitokoto Control Pane</p>
+            <div>
+                <label for="users">Choose a user:</label>
+                <select size="1" name="users" id="user-selector">
+                </select>
+            </div>
+            <label for="content">Content:</label>
+            <input type="text" name="content" id="content"></input>
+            <input type="submit" value="Submit" id="submit"></input>
+            <div>
+                <p>Result:</p>
+                <p id="result"></p>
+            </div>
+        </div>
+    </div>
+</body>
+<script defer>
+    fetch("/api/v1/users").then(e => {
+        return e.json()
+    }).then(json => {
+        const selector = document.getElementById("user-selector");
+        const users = json.Data;
+        users.forEach(user => {
+            const option = document.createElement("option")
+            option.setAttribute('value', user.ID)
+            option.innerText = user.Name;
+            selector.appendChild(option);
+        });
+    });
+
+    const userSelector = document.getElementById("user-selector");
+    const content = document.getElementById("content");
+    const submit = document.getElementById("submit");
+    const result = document.getElementById("result");
+
+    submit.onclick = () => {
+        fetch("/api/v1/hitokoto", {
+            method: "POST",
+            body: JSON.stringify({
+                "UserID": parseInt(userSelector.value),
+                "Content": content.value
+            })
+        }).then(res => res.text()).then(json => {
+            result.innerText = json;
+        }).catch(e => {
+            result.innerText = e;
+        })
+    };
+</script>
+
+</html>

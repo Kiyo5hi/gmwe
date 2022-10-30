@@ -1,0 +1,60 @@
+<html>
+
+<head>
+    <title>For Acey</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #app {
+            background-color: #5DAC81;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #brief {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        #gmwe-pic {
+            height: 256px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div id="brief">
+            <p>❤️ This is for and only for my Acey. ❤️</p>
+            <p>🐕 🌼 🦆</p>
+            <img id="gmwe-pic" src="./gmwe.webp" />
+            <div>
+                <p id="hitokoto">Loading...</p>
+            </div>
+            <iframe style="border-radius:12px"
+                src="https://open.spotify.com/embed/track/1GuvP2zN3hTMTaf991GVc0?utm_source=generator&theme=0"
+                width="100%" height="152" frameBorder="0" allowfullscreen=""
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"></iframe>
+        </div>
+    </div>
+</body>
+
+<script>
+    fetch("/api/v1/hitokoto").then(res => {
+        return res.json();
+    }).then(json => {
+        const hitokoto = document.getElementById("hitokoto");
+        hitokoto.innerText = `『${json.Data.Content}』 —— ${json.Data.User.Name}`;
+    });
+</script>
+
+</html>
