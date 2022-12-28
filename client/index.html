@@ -1,7 +1,15 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="GummyWe - Gaga Meow meow Woof woof Empire">
     <title>For Acey</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css"
+        integrity="sha256-uqQQGnDcmRKvhKwc5Vm4XT1GQ2oV6t1U0NR2N9tV+BQ=" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"
+        integrity="sha256-6Y7CJDaltoeNgk+ZftgCD9jLgmGv4xKUo8nQ0HgAwVo=" crossorigin="anonymous"></script>
+    <script defer src="main.js"></script>
     <style>
         html,
         body {
@@ -16,6 +24,7 @@
             justify-content: center;
             height: 100vh;
             width: 100vw;
+            flex-direction: column;
         }
 
         #brief {
@@ -26,6 +35,11 @@
 
         #gmwe-pic {
             height: 256px;
+            width: auto;
+        }
+
+        #music {
+            width: 360px;
         }
     </style>
 </head>
@@ -35,26 +49,13 @@
         <div id="brief">
             <p>❤️ This is for and only for my Acey. ❤️</p>
             <p>🐕 🌼 🦆</p>
-            <img id="gmwe-pic" src="./gmwe.webp" />
+            <img id="gmwe-pic" src="./gmwe.webp" alt="GMWE Logo" />
             <div>
                 <p id="hitokoto">Loading...</p>
             </div>
-            <iframe style="border-radius:12px"
-                src="https://open.spotify.com/embed/track/1GuvP2zN3hTMTaf991GVc0?utm_source=generator&theme=0"
-                width="100%" height="152" frameBorder="0" allowfullscreen=""
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"></iframe>
         </div>
+        <div id="music"></div>
     </div>
 </body>
-
-<script>
-    fetch("/api/v1/hitokoto").then(res => {
-        return res.json();
-    }).then(json => {
-        const hitokoto = document.getElementById("hitokoto");
-        hitokoto.innerText = `『${json.Data.Content}』 —— ${json.Data.User.Name}`;
-    });
-</script>
 
 </html>
