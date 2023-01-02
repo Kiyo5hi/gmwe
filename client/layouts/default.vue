@@ -2,10 +2,11 @@
   <div class="drawer drawer-mobile">
     <input id="sidebar" type="checkbox" class="drawer-toggle">
     <div class="drawer-content flex flex-col">
-      <AppNavbar />
+      <div class="sticky top-0 opacity-80">
+        <AppNavbar />
+      </div>
 
-      <div class="p-4">
-        <!-- Page content here -->
+      <div class="p-4 h-full">
         <slot />
       </div>
     </div>
