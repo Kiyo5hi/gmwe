@@ -2,8 +2,9 @@
   <div class="flex flex-col items-center">
     <ul class="steps steps-vertical">
       <li v-for="event in events" :key="event.event" data-content="●" class="step step-primary">
-        <div class="text-left">
-          {{ event.date }}: {{ event.event }}
+        <div class="flex flex-row items-center text-left">
+          <span class="flex-none my-auto">{{ event.date }}:&nbsp;</span>
+          <span class="flex-1">{{ event.event }}</span>
         </div>
       </li>
     </ul>
