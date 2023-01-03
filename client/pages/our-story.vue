@@ -1,8 +1,10 @@
 <template>
-  <div class="flex flex-col items-center justify-center">
+  <div class="flex flex-col items-center">
     <ul class="steps steps-vertical">
       <li v-for="event in events" :key="event.event" data-content="●" class="step step-primary">
-        {{ event.date }}: {{ event.event }}
+        <div class="text-left">
+          {{ event.date }}: {{ event.event }}
+        </div>
       </li>
     </ul>
   </div>
