@@ -10,7 +10,7 @@
   </div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 const events = [{
   date: '2022-06-18',
   event: '初识'

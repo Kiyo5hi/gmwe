@@ -1,6 +1,6 @@
 <template>
   <div class="drawer drawer-mobile">
-    <input id="sidebar" type="checkbox" class="drawer-toggle">
+    <input id="sidebar" v-model="checked" type="checkbox" class="drawer-toggle">
     <div class="drawer-content flex flex-col">
       <div class="h-full w-full overflow-y-scroll">
         <AppNavbar />
@@ -12,7 +12,11 @@
 
     <div class="drawer-side">
       <label for="sidebar" class="drawer-overlay" />
-      <AppSidebar />
+      <AppSidebar @change="checked = false" />
     </div>
   </div>
 </template>
+
+<script lang="ts" setup>
+const checked = ref(false)
+</script>

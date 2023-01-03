@@ -5,7 +5,7 @@
       <img src="/gmwe.webp" alt="GMWE Logo" class="w-56 h-auto m-auto">
     </div>
     <div>
-      {{ hitokotoPending ? 'Loading...' : `『${hitokoto.Data.Content}』 —— ${hitokoto.Data.User.Name}` }}
+      {{ hitokotoPending || hitokoto === null ? 'Loading...' : `『${hitokoto.Data.Content}』 —— ${hitokoto.Data.User.Name}` }}
     </div>
     <div class="divider" />
     <div class="h-48 w-full sm:w-96">
@@ -14,6 +14,6 @@
   </div>
 </template>
 
-<script setup>
-const { data: hitokoto, pending: hitokotoPending } = useLazyFetch('/api/v1/hitokoto')
+<script lang="ts" setup>
+const { data: hitokoto, pending: hitokotoPending } = useLazyFetch<Hitokoto>('/api/v1/hitokoto')
 </script>

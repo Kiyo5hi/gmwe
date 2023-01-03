@@ -8,7 +8,7 @@
 
     <ul v-for="route in routes" :key="route.name" class="menu flex flex-col p-0 px-4">
       <li>
-        <NuxtLink :to="route.path" :class="currentRoute.path === route.path ? 'active' : ''">
+        <NuxtLink :to="route.path" :class="{ active: currentRoute.path == route.path }" @click="emit('change')">
           <span class="capitalize">
             {{ route.name }}
           </span>
@@ -18,8 +18,10 @@
   </aside>
 </template>
 
-<script setup>
+<script lang="ts" setup>
 const routes = getSortedRoutes()
-routes.forEach((r) => { r.name = r.name.replaceAll('-', ' ') })
+routes.forEach((r) => { r.name = r.name!.toString().replaceAll('-', ' ') })
 const currentRoute = useRoute()
+
+const emit = defineEmits<{(event: 'change'): void}>()
 </script>
