@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full bg-gray-900 shadow-lg rounded p-3 flex flex-row items-center">
+  <div class="h-full bg-green-500 dark:bg-gray-900 shadow-lg rounded p-3 flex flex-row items-center">
     <div class="h-full group relative flex">
       <img class="max-h-full w-auto my-auto block rounded" :src="props.cover">
       <div
@@ -33,7 +33,7 @@
       <h3 class="text-white text-lg">
         {{ props.name }}
       </h3>
-      <p class="text-gray-400">
+      <p class="text-gray-800 dark:text-gray-400">
         {{ props.artist }}
       </p>
     </div>
