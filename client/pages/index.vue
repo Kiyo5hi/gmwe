@@ -8,7 +8,7 @@
       {{ hitokotoPending ? 'Loading...' : `『${hitokoto.Data.Content}』 —— ${hitokoto.Data.User.Name}` }}
     </div>
     <div class="divider" />
-    <div class="h-32 w-64">
+    <div class="h-48 w-5/6">
       <MusicPlayer name="暗號" artist="Jay Chou" url="music.mp3" cover="cover.webp" />
     </div>
   </div>

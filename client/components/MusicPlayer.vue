@@ -1,7 +1,7 @@
 <template>
   <div class="h-full bg-gray-900 shadow-lg rounded p-3 flex flex-row items-center">
-    <div class="h-full group relative">
-      <img class="max-h-full w-auto block rounded" :src="props.cover">
+    <div class="h-full group relative flex">
+      <img class="max-h-full w-auto my-auto block rounded" :src="props.cover">
       <div
         class="absolute bg-black rounded bg-opacity-0 group-hover:bg-opacity-60 w-full h-full top-0 flex items-center group-hover:opacity-100 transition justify-evenly"
       >
