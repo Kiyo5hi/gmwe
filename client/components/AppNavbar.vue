@@ -18,13 +18,16 @@
           </svg>
         </label>
       </div>
-      <div class="flex-1 px-2 mx-2">
+      <div class="flex-1 px-2">
         <div class="lg:hidden">
           <AppLogo />
         </div>
-        <div class="ml-2">
+        <div class="md:ml-2">
           🐕 🌼 🦆
         </div>
+      </div>
+      <div>
+        <ThemeSelector />
       </div>
     </nav>
   </div>

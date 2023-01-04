@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full bg-green-500 dark:bg-gray-900 shadow-lg rounded p-3 flex flex-row items-center">
+  <div class="h-full bg-green-500 shadow-lg rounded p-3 flex flex-row items-center">
     <div class="h-full group relative flex">
       <img class="max-h-full w-auto my-auto block rounded" :src="props.cover">
       <div
@@ -33,7 +33,7 @@
       <h3 class="text-white text-lg">
         {{ props.name }}
       </h3>
-      <p class="text-gray-800 dark:text-gray-400">
+      <p class="text-gray-800">
         {{ props.artist }}
       </p>
     </div>
@@ -41,24 +41,12 @@
 </template>
 
 <script lang="ts" setup>
-const props = defineProps({
-  name: {
-    type: String,
-    required: true
-  },
-  artist: {
-    type: String,
-    required: true
-  },
-  url: {
-    type: String,
-    required: true
-  },
-  cover: {
-    type: String,
-    required: true
-  }
-})
+const props = defineProps<{
+  name: string,
+  artist: string,
+  url: string,
+  cover: string,
+}>()
 
 const music = new Audio(props.url)
 const isPlaying = ref(false)
