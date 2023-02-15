@@ -34,6 +34,9 @@ const events = [{
   date: '2022-07-27',
   event: '纹身'
 }, {
+  date: '2022-08-04',
+  event: '第一次七夕节'
+}, {
   date: '2022-08-07',
   event: 'First Ring'
 }, {
@@ -52,6 +55,9 @@ const events = [{
   date: '2022-10-25',
   event: '狗信 Batch 2 签收'
 }, {
+  date: '2022-10-26',
+  event: '100 Days'
+}, {
   date: '2022-11-18',
   event: '很重要的电子谈心'
 }, {
@@ -66,5 +72,11 @@ const events = [{
 }, {
   date: '2023-01-01',
   event: '新篇章'
+}, {
+  date: '2023-02-03',
+  event: '200 Days'
+}, {
+  date: '2023-02-14',
+  event: 'First Valentine\'s Day'
 }].sort((a, b) => a.date.localeCompare(b.date))
 </script>
