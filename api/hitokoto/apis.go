@@ -3,7 +3,8 @@ package hitokoto
 import (
 	"net/http"
 
-	"acey.k1yoshi.com/api/utils/requests"
+	"gmwe/api/utils/requests"
+
 	"github.com/gin-gonic/gin"
 )
 

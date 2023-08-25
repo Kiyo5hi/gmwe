@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 
-	"acey.k1yoshi.com/api/auth"
-	"acey.k1yoshi.com/api/consts"
-	"acey.k1yoshi.com/api/hitokoto"
-	"acey.k1yoshi.com/api/ping"
-	"acey.k1yoshi.com/api/utils/db"
-	"acey.k1yoshi.com/api/utils/middlewares"
+	"gmwe/api/auth"
+	"gmwe/api/consts"
+	"gmwe/api/hitokoto"
+	"gmwe/api/ping"
+	"gmwe/api/utils/db"
+	"gmwe/api/utils/middlewares"
+
 	"github.com/gin-gonic/gin"
 )
 

@@ -3,7 +3,8 @@ package db
 import (
 	"sync"
 
-	"acey.k1yoshi.com/api/consts"
+	"gmwe/api/consts"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )

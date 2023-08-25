@@ -1,4 +1,4 @@
-module acey.k1yoshi.com
+module gmwe
 
 go 1.19
 
