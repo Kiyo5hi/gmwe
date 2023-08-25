@@ -1,7 +1,7 @@
 package hitokoto
 
 import (
-	"acey.k1yoshi.com/gmwe/api/auth"
+	"acey.k1yoshi.com/api/auth"
 	"gorm.io/gorm"
 )
 

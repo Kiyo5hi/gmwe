@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	"acey.k1yoshi.com/gmwe/api/auth"
-	"acey.k1yoshi.com/gmwe/api/db"
-	gmwe "acey.k1yoshi.com/gmwe/api/errors"
+	"acey.k1yoshi.com/api/auth"
+	"acey.k1yoshi.com/api/db"
+	gmwe "acey.k1yoshi.com/api/errors"
 )
 
 type HitokotoService struct{}

@@ -3,7 +3,7 @@ package ping
 import (
 	"net/http"
 
-	"acey.k1yoshi.com/gmwe/api/utils/requests"
+	"acey.k1yoshi.com/api/utils/requests"
 	"github.com/gin-gonic/gin"
 )
 

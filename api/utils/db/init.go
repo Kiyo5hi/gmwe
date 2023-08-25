@@ -1,9 +1,9 @@
 package db
 
 import (
-	"acey.k1yoshi.com/gmwe/api/auth"
-	"acey.k1yoshi.com/gmwe/api/db"
-	"acey.k1yoshi.com/gmwe/api/hitokoto"
+	"acey.k1yoshi.com/api/auth"
+	"acey.k1yoshi.com/api/db"
+	"acey.k1yoshi.com/api/hitokoto"
 )
 
 func InitDB() (err error) {

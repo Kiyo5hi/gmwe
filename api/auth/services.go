@@ -3,8 +3,8 @@ package auth
 import (
 	"fmt"
 
-	"acey.k1yoshi.com/gmwe/api/db"
-	gmwe "acey.k1yoshi.com/gmwe/api/errors"
+	"acey.k1yoshi.com/api/db"
+	gmwe "acey.k1yoshi.com/api/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
