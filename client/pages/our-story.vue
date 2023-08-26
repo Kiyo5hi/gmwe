@@ -40,6 +40,9 @@ const events = [{
   date: '2022-08-07',
   event: 'First Ring'
 }, {
+  date: '2022-09-11',
+  event: '奇妙的一天 and 橡木郡'
+}, {
   date: '2022-09-12',
   event: '电子化'
 }, {
@@ -81,5 +84,41 @@ const events = [{
 }, {
   date: '2023-02-19',
   event: '鸭狗围巾'
+}, {
+  date: '2023-06-19',
+  event: '狗归狗回'
+}, {
+  date: '2023-06-23',
+  event: '那不勒斯意面，灌，男友暂存'
+}, {
+  date: '2023-07-08',
+  event: 'Second Ring'
+}, {
+  date: '2023-07-15',
+  event: '西拍答谢宴'
+}, {
+  date: '2023-08-01',
+  event: '鸭袜 Replication'
+}, {
+  date: '2023-08-05',
+  event: '分手体验卡'
+}, {
+  date: '2023-08-09',
+  event: '分手体验卡到期'
+}, {
+  date: '2023-08-16',
+  event: '小动物们的表情包'
+}, {
+  date: '2023-08-18',
+  event: '巨大鸭袜到达'
+}, {
+  date: '2023-08-19',
+  event: 'IKEA'
+}, {
+  date: '2023-08-20',
+  event: '给 Aron 打猎'
+}, {
+  date: '2023-08-22',
+  event: '重游橡木郡'
 }].sort((a, b) => a.date.localeCompare(b.date))
 </script>
