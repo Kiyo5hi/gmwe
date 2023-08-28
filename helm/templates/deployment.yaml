@@ -37,13 +37,16 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
-            - name: DB_ROOT_PASSWORD
+            - name: DB_PASSWORD
+            {{- if .Values.db.password }}
+              value: {{ .Values.db.password }}
+            {{- else }}
               valueFrom:
                 secretKeyRef:
-                  name: mysql
-                  key: mysql-root-password
+                  {{- required "MySQL secret is required if password is not specified" (toYaml .Values.db.secret | nindent 18) }}
+            {{- end }}
             - name: DB_URI
-              value: root:$(DB_ROOT_PASSWORD)@tcp(mysql-dev:3306)/gmwe?charset=utf8mb4&parseTime=True&loc=Local
+              value: {{ .Values.db.username }}:$(DB_PASSWORD)@tcp({{ .Values.db.host }}:{{ .Values.db.port }})/{{ .Values.db.database }}?charset=utf8mb4&parseTime=True&loc=Local
           livenessProbe:
             httpGet:
               path: /

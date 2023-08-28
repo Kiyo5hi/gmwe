@@ -32,7 +32,7 @@ service:
   port: 80
 
 ingress:
-  enabled: false
+  enabled: enabled
   className: "traefik"
   annotations:
     cert-manager.io/cluster-issuer: "le"
@@ -75,3 +75,13 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+db:
+  host: mysql
+  port: 3306
+  database: gmwe
+  username: root
+  password: ""
+  secret:
+    name: mysql
+    key: mysql-root-password
