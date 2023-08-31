@@ -2,6 +2,9 @@
     handle_path /api/models/* {
         reverse_proxy torchserve:8080
     }
+    route /api/* {
+        reverse_proxy localhost:8080
+    }
     root * /app/client
     file_server {
         precompressed zstd br gzip
