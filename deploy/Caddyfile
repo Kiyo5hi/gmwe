@@ -1,5 +1,5 @@
 :80 {
-    route /api/* {
+    handle_path /api/models/* {
         reverse_proxy torchserve:8080
     }
     root * /app/client
