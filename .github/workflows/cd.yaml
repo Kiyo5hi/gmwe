@@ -97,7 +97,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.IMAGE_NAME }}
-          tags: type=sha
+          tags: type=sha,format=long
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'

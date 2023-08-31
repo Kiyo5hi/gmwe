@@ -1,6 +1,6 @@
 :80 {
     route /api/* {
-        reverse_proxy localhost:8080
+        reverse_proxy torchserve:8080
     }
     root * /app/client
     file_server {
