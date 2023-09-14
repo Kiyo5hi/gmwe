@@ -126,5 +126,11 @@ const events = [{
 }, {
   date: '2023-09-06',
   event: '🐶得到第一份工作'
+}, {
+  date: '2023-09-09',
+  event: 'Observatory 🌃'
+}, {
+  date: '2023-09-09',
+  event: '🐱 Aron 6.8'
 }].sort((a, b) => a.date.localeCompare(b.date))
 </script>
