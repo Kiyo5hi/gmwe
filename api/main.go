@@ -22,7 +22,9 @@ func main() {
 	r.Use(middlewares.CORSMiddleware())
 	r.Use(middlewares.RequestIDMiddleware())
 
-	db.InitDB()
+	if err := db.InitDB(); err != nil {
+		panic("database initialization failed")
+	}
 	v1 := r.Group("/api/v1")
 	{
 		hitokotoAPI := new(hitokoto.HitokotoAPI)

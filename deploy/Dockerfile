@@ -1,8 +1,12 @@
-FROM docker.io/library/golang:1.19 AS api_build
+FROM docker.io/library/golang:1.26-alpine AS api_build
+
+RUN apk add --no-cache build-base
 
 COPY . /src
 WORKDIR /src
-RUN mkdir -p /dist && go build -o /dist/api api/main.go
+RUN go test ./api/... && mkdir -p /dist && \
+    CGO_ENABLED=1 go build -o /dist/api ./api && \
+    CGO_ENABLED=1 go build -o /dist/storage ./api/cmd/storage
 
 FROM docker.io/library/node:lts AS client_build
 

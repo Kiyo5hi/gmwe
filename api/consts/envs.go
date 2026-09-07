@@ -1,15 +1,15 @@
 package consts
 
 import (
-	"crypto/sha256"
-	"math/rand"
+	"crypto/rand"
+	"encoding/hex"
 	"os"
 )
 
 var (
 	PORT          = env("PORT", "8080")
 	ENV           = env("ENV", "debug")
-	DB_URI        = env("DB_URI", "root:root@tcp(mysql-dev:3306)/gmwe?charset=utf8mb4&parseTime=True&loc=Local")
+	DB_URI        = env("DB_URI", "file:gmwe.db?mode=rwc")
 	ACCESS_SECRET = env("ACCESS_SECRET", generateAccessSecret())
 )
 
@@ -25,7 +25,9 @@ func env(key string, defaultValue string) (value string) {
 }
 
 func generateAccessSecret() string {
-	r := rand.Int31()
-	hash := sha256.Sum256([]byte(string(r)))
-	return string(hash[:])
+	value := make([]byte, 32)
+	if _, err := rand.Read(value); err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(value)
 }

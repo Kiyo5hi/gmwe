@@ -8,7 +8,7 @@ import (
 
 type Hitokoto struct {
 	gorm.Model
-	Content string `gorm:"unique"`
+	Content string `gorm:"unique;type:text COLLATE gmwe_unicode_ci"`
 	UserID  int
 	User    auth.User
 }
