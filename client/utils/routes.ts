@@ -1,4 +1,4 @@
-import { RouteRecord } from 'vue-router'
+import type { RouteRecord } from 'vue-router'
 
 function sortRoutes (a: RouteRecord, b: RouteRecord): number {
   if (a.name === 'index') {

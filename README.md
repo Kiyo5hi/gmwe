@@ -34,7 +34,10 @@ main file of a running database. Protect backup files and their parent directory
 
 Build with `docker build -f deploy/Dockerfile .`; the API build runs
 `go test ./api/...` and includes the C compiler needed by the official GORM
-SQLite driver. The client build is unchanged.
+SQLite driver. The static Nuxt 3 client uses Node 24 and npm 11.19.1;
+run `npm ci` followed by `npm run generate` in `client/`. Commit
+`package-lock.json` with dependency changes. Do not regenerate a separate pnpm
+lockfile: production and local builds use the same npm lock.
 
 Authentication is separate from this storage change. The API must not be exposed
 for anonymous writes. The managed homelab deployment keeps its public/private

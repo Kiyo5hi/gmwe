@@ -8,11 +8,13 @@ RUN go test ./api/... && mkdir -p /dist && \
     CGO_ENABLED=1 go build -o /dist/api ./api && \
     CGO_ENABLED=1 go build -o /dist/storage ./api/cmd/storage
 
-FROM docker.io/library/node:lts AS client_build
+FROM --platform=$BUILDPLATFORM docker.io/library/node:24 AS client_build
+
+RUN npm install --global npm@11.19.1
 
 COPY . /src
 WORKDIR /src/client
-RUN npm install && npm run generate && \
+RUN npm ci && npm run generate && \
     cp -r .output/public /dist
 
 FROM docker.io/library/caddy:2-alpine
