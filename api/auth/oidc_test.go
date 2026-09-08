@@ -188,6 +188,9 @@ func TestLoginPKCEAndCallbackState(t *testing.T) {
 		t.Fatal(err)
 	}
 	q := u.Query()
+	if q.Get("scope") != "openid "+WriteScope {
+		t.Fatal("login requests unnecessary permissions")
+	}
 	if q.Get("code_challenge_method") != "S256" || len(q.Get("code_challenge")) < 40 || q.Get("state") == "" || q.Get("nonce") == "" || q.Get("resource") != f.a.Config.Resource || q.Get("redirect_uri") != "https://gmwe.test/api/auth/callback" {
 		t.Fatal("missing login protections")
 	}

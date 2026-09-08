@@ -97,7 +97,7 @@ func NewOIDC(ctx context.Context, cfg OIDCConfig) (*OIDCAuth, error) {
 	endpoint.AuthStyle = oauth2.AuthStyleInParams
 	return &OIDCAuth{Config: cfg, Sessions: sessions, httpClient: httpClient, loginLimit: rate.NewLimiter(rate.Every(10*time.Second), 10),
 		client: &oauth2.Config{ClientID: cfg.ClientID, Endpoint: endpoint,
-			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, "profile", "groups", WriteScope}},
+			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, WriteScope}},
 		idVerifier:  provider.Verifier(&oidc.Config{ClientID: cfg.ClientID, SupportedSigningAlgs: []string{"RS256"}}),
 		apiVerifier: provider.Verifier(&oidc.Config{ClientID: cfg.Resource, SupportedSigningAlgs: []string{"RS256"}})}, nil
 }
