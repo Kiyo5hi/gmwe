@@ -1,7 +1,5 @@
 :80 {
-    handle_path /api/models/* {
-        reverse_proxy torchserve:8080
-    }
+    respond /api/models/* 410
     route /api/* {
         reverse_proxy localhost:8080
     }

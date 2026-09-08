@@ -3,11 +3,16 @@ module gmwe
 go 1.26.0
 
 require (
+	github.com/alexedwards/scs/v2 v2.9.0
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/gin-gonic/gin v1.12.0
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/uuid v1.3.0
 	github.com/mattn/go-sqlite3 v1.14.52
 	golang.org/x/crypto v0.56.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/text v0.41.0
+	golang.org/x/time v0.15.0
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.30.0
 )
