@@ -27,9 +27,6 @@
         </div>
       </div>
       <div>
-        <NuxtLink to="/account" class="btn btn-ghost">
-          Account
-        </NuxtLink>
         <ThemeSelector />
       </div>
     </nav>
