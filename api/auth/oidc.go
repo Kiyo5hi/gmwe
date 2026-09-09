@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/subtle"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -21,6 +22,9 @@ import (
 )
 
 const WriteScope = "write:hitokoto"
+
+//go:embed login.html
+var loginHTML string
 
 type Writer struct {
 	Subject string `json:"subject"`
@@ -142,29 +146,21 @@ func (a *OIDCAuth) csrf(c *gin.Context) bool {
 		subtle.ConstantTimeCompare([]byte(expected), []byte(c.GetHeader("X-CSRF-Token"))) == 1
 }
 
-func (a *OIDCAuth) RequireWriter(sessionOnly bool) gin.HandlerFunc {
+func (a *OIDCAuth) RequireWriter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if a == nil {
 			c.AbortWithStatus(401)
 			return
 		}
-		raw := ""
-		if header := c.GetHeader("Authorization"); header != "" {
-			if sessionOnly || !strings.HasPrefix(header, "Bearer ") {
-				c.AbortWithStatus(401)
-				return
-			}
-			raw = strings.TrimPrefix(header, "Bearer ")
-		} else {
-			raw = a.Sessions.GetString(c.Request.Context(), "access")
-			if raw == "" {
-				c.AbortWithStatus(401)
-				return
-			}
-			if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead && !a.csrf(c) {
-				c.AbortWithStatus(403)
-				return
-			}
+		c.Header("Cache-Control", "private, no-store")
+		raw := a.Sessions.GetString(c.Request.Context(), "access")
+		if c.GetHeader("Authorization") != "" || raw == "" {
+			c.AbortWithStatus(401)
+			return
+		}
+		if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead && !a.csrf(c) {
+			c.AbortWithStatus(403)
+			return
 		}
 		writer, err := a.VerifyAccess(c.Request.Context(), raw)
 		if err != nil {
@@ -177,6 +173,12 @@ func (a *OIDCAuth) RequireWriter(sessionOnly bool) gin.HandlerFunc {
 }
 
 func (a *OIDCAuth) Routes(r *gin.Engine) {
+	r.GET("/login", func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store")
+		c.Header("Referrer-Policy", "no-referrer")
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Data(200, "text/html; charset=utf-8", []byte(loginHTML))
+	})
 	group := r.Group("/api/auth")
 	group.Use(func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
@@ -186,18 +188,25 @@ func (a *OIDCAuth) Routes(r *gin.Engine) {
 	})
 	group.GET("/login", a.login)
 	group.GET("/callback", a.callback)
-	group.GET("/me", a.RequireWriter(true), func(c *gin.Context) {
+	group.GET("/page-access", func(c *gin.Context) {
+		raw := a.Sessions.GetString(c.Request.Context(), "access")
+		_, err := a.VerifyAccess(c.Request.Context(), raw)
+		if err != nil || c.GetHeader("Authorization") != "" {
+			c.Redirect(302, "/login")
+			return
+		}
+		c.Status(204)
+	})
+	group.GET("/me", a.RequireWriter(), func(c *gin.Context) {
 		c.JSON(200, gin.H{"user": c.MustGet("writer"), "csrf": a.Sessions.GetString(c.Request.Context(), "csrf")})
 	})
-	group.POST("/logout", a.RequireWriter(true), func(c *gin.Context) {
+	group.POST("/logout", a.RequireWriter(), func(c *gin.Context) {
 		if err := a.Sessions.Destroy(c.Request.Context()); err != nil {
 			c.AbortWithStatus(500)
 			return
 		}
 		c.Status(204)
 	})
-	group.POST("/shortcut/start", a.RequireWriter(true), a.startShortcut)
-	group.POST("/shortcut/finish", a.RequireWriter(true), func(c *gin.Context) { c.Status(410) })
 }
 
 func (a *OIDCAuth) login(c *gin.Context) {
@@ -206,23 +215,18 @@ func (a *OIDCAuth) login(c *gin.Context) {
 		c.AbortWithStatus(429)
 		return
 	}
-	c.Redirect(302, a.authorizationURL(c.Request.Context(), ""))
+	c.Redirect(302, a.authorizationURL(c.Request.Context()))
 }
 
-func (a *OIDCAuth) authorizationURL(ctx context.Context, pairingSubject string) string {
+func (a *OIDCAuth) authorizationURL(ctx context.Context) string {
 	// SCS keeps PKCE/state server-side; only an opaque host-only cookie reaches the browser.
 	state, nonce, verifier := oauth2.GenerateVerifier(), oauth2.GenerateVerifier(), oauth2.GenerateVerifier()
 	a.Sessions.Put(ctx, "state", state)
 	a.Sessions.Put(ctx, "nonce", nonce)
 	a.Sessions.Put(ctx, "verifier", verifier)
 	a.Sessions.Put(ctx, "login_time", time.Now().Unix())
-	a.Sessions.Put(ctx, "pairing_subject", pairingSubject)
 	options := []oauth2.AuthCodeOption{oidc.Nonce(nonce), oauth2.S256ChallengeOption(verifier),
 		oauth2.SetAuthURLParam("resource", a.Config.Resource)}
-	if pairingSubject != "" {
-		options = append(options, oauth2.SetAuthURLParam("scope", "openid offline_access "+WriteScope),
-			oauth2.SetAuthURLParam("prompt", "consent"))
-	}
 	return a.client.AuthCodeURL(state, options...)
 }
 
@@ -231,7 +235,6 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 	state := a.Sessions.PopString(ctx, "state")
 	nonce := a.Sessions.PopString(ctx, "nonce")
 	verifier := a.Sessions.PopString(ctx, "verifier")
-	pairingSubject := a.Sessions.PopString(ctx, "pairing_subject")
 	started := time.Unix(a.Sessions.GetInt64(ctx, "login_time"), 0)
 	a.Sessions.Remove(ctx, "login_time")
 	if state == "" || nonce == "" || verifier == "" || time.Since(started) > 10*time.Minute ||
@@ -261,32 +264,11 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
-	if pairingSubject != "" && (writer.Subject != pairingSubject || token.RefreshToken == "") {
-		c.AbortWithStatus(403)
-		return
-	}
 	if err := a.Sessions.RenewToken(ctx); err != nil {
 		c.AbortWithStatus(500)
 		return
 	}
 	a.Sessions.Put(ctx, "access", token.AccessToken)
 	a.Sessions.Put(ctx, "csrf", oauth2.GenerateVerifier())
-	if pairingSubject != "" {
-		// Download once from the verified callback; never persist the refresh token.
-		c.Header("Content-Disposition", `attachment; filename="gmwe-shortcut.json"`)
-		c.JSON(200, gin.H{"client_id": a.Config.ClientID, "resource": a.Config.Resource,
-			"token_endpoint": a.client.Endpoint.TokenURL, "refresh_token": token.RefreshToken,
-			"api_endpoint": a.Config.Origin + "/api/v1/hitokoto"})
-		return
-	}
 	c.Redirect(303, "/account")
-}
-
-func (a *OIDCAuth) startShortcut(c *gin.Context) {
-	if !a.loginLimit.Allow() {
-		c.Header("Retry-After", "10")
-		c.AbortWithStatus(429)
-		return
-	}
-	c.JSON(200, gin.H{"authorization_url": a.authorizationURL(c.Request.Context(), c.MustGet("writer").(Writer).Subject)})
 }

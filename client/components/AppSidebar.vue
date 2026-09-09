@@ -10,7 +10,7 @@
       <li>
         <NuxtLink :to="route.path" :class="{ active: currentRoute.path == route.path }" @click="emit('change')">
           <span class="capitalize">
-            {{ route.name }}
+            {{ route.path === '/account' ? 'New entry' : route.name }}
           </span>
         </NuxtLink>
       </li>

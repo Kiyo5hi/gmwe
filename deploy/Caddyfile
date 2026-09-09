@@ -1,10 +1,28 @@
 :80 {
+    route {
+    header Cache-Control "private, no-store"
+    header Referrer-Policy "no-referrer"
+    respond /downloads/* 410
+    respond /api/auth/shortcut/* 410
     respond /api/models/* 410
-    route /api/* {
+    handle /api/* {
         reverse_proxy localhost:8080
+    }
+    handle /login {
+        reverse_proxy localhost:8080
+    }
+    handle /gmwe.webp {
+        root * /app/client
+        file_server
+    }
+    handle {
+    forward_auth localhost:8080 {
+        uri /api/auth/page-access
     }
     root * /app/client
     file_server {
         precompressed zstd br gzip
+    }
+    }
     }
 }

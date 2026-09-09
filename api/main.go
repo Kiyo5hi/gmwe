@@ -47,11 +47,11 @@ func main() {
 	v1 := r.Group("/api/v1")
 	{
 		hitokotoAPI := new(hitokoto.HitokotoAPI)
-		v1.GET("/hitokoto", hitokotoAPI.Get)
-		v1.POST("/hitokoto", login.RequireWriter(false), hitokotoAPI.Post)
+		v1.GET("/hitokoto", login.RequireWriter(), hitokotoAPI.Get)
+		v1.POST("/hitokoto", login.RequireWriter(), hitokotoAPI.Post)
 
 		usersAPI := new(auth.UsersAPI)
-		v1.GET("/users", login.RequireWriter(false), usersAPI.Get)
+		v1.GET("/users", login.RequireWriter(), usersAPI.Get)
 
 		pingAPI := new(ping.PingApi)
 		v1.Any("/ping", pingAPI.All)
