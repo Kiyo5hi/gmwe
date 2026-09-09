@@ -17,7 +17,7 @@ a { display: flex; align-items: center; justify-content: center; gap: 0.6rem; mi
 a.selected { color: #21825c; border-color: currentColor; font-weight: 600; }
 a:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
 @media (max-width: 767px) {
-  .app-navigation { position: fixed; bottom: 0; left: 0; right: 0; z-index: 40; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #8884; border-bottom: 0; }
+  .app-navigation { grid-row: 3; height: calc(4rem + env(safe-area-inset-bottom)); grid-template-rows: 4rem; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #8884; border-bottom: 0; }
   a { flex-direction: column; gap: 0.2rem; height: 4rem; font-size: 0.75rem; border-bottom: 0; border-top: 3px solid transparent; }
 }
 </style>
