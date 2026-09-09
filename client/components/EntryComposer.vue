@@ -16,6 +16,12 @@
     </p>
     <a v-if="expired" class="btn btn-outline" href="/api/auth/login">重新登录</a>
     <form class="entry-form" @submit.prevent="saveEntry">
+      <label for="entry-member">成员</label>
+      <select id="entry-member" v-model="selectedMember" class="select select-bordered" required :disabled="busy || loading || expired || !members.length">
+        <option v-for="member in members" :key="member.ID" :value="member.ID">
+          {{ member.Name }}
+        </option>
+      </select>
       <label for="entry">内容</label>
       <textarea
         id="entry"
@@ -30,7 +36,7 @@
       />
       <div class="account-actions">
         <span id="entry-count" :class="{ 'text-error': count > 2000 }">{{ count }} / 2000</span>
-        <button class="btn btn-primary" :disabled="busy || loading || expired || !account || !content.trim() || count > 2000">
+        <button class="btn btn-primary" :disabled="busy || loading || expired || !account || !selectedMember || !content.trim() || count > 2000">
           {{ busy ? '保存中…' : '保存' }}
         </button>
       </div>
@@ -38,17 +44,20 @@
     <section v-if="saved" class="saved-entry" role="status" aria-live="polite">
       <h2>已保存</h2>
       <blockquote>{{ saved.Content }}</blockquote>
-      <p>{{ account?.user.name }} <span class="entry-id">#{{ saved.ID }}</span></p>
+      <p>{{ saved.User.Name }} <span class="entry-id">#{{ saved.ID }}</span></p>
     </section>
   </section>
 </template>
 
 <script setup lang="ts">
-type Account = { user: { name: string, subject: string }, csrf: string }
-type Entry = { ID: number, Content: string }
+type Account = { user: { name: string, subject: string, user_id: number }, csrf: string }
+type Member = { ID: number, Name: string }
+type Entry = { ID: number, Content: string, User: Member }
 const emit = defineEmits<{(event: 'saved'): void}>()
 const account = ref<Account | null>(null)
 const content = ref('')
+const members = ref<Member[]>([])
+const selectedMember = ref<number | null>(null)
 const input = ref<HTMLTextAreaElement | null>(null)
 const saved = ref<Entry | null>(null)
 const error = ref('')
@@ -58,10 +67,10 @@ const expired = ref(false)
 const count = computed(() => Array.from(content.value).length)
 const draftKey = computed(() => account.value ? 'gmwe:draft:' + account.value.user.subject : '')
 
-watch(content, (value) => {
+watch([content, selectedMember], ([value, member]) => {
   if (!draftKey.value) { return }
   try {
-    if (value) { sessionStorage.setItem(draftKey.value, JSON.stringify({ text: value, time: Date.now() })) } else { sessionStorage.removeItem(draftKey.value) }
+    if (value) { sessionStorage.setItem(draftKey.value, JSON.stringify({ text: value, member, time: Date.now() })) } else { sessionStorage.removeItem(draftKey.value) }
   } catch { /* Private browsing may disable storage; retain the in-memory input. */ }
 })
 
@@ -71,9 +80,19 @@ onMounted(async () => {
     if (response.status === 401) { expired.value = true; return }
     if (!response.ok) { throw new Error('Account unavailable') }
     account.value = await response.json()
+    const users = await fetch('/api/v1/users', { cache: 'no-store' })
+    if (users.status === 401) { expired.value = true; return }
+    if (!users.ok) { throw new Error('Members unavailable') }
+    const result = await users.json()
+    if (!Array.isArray(result.Data)) { throw new TypeError('Members unavailable') }
+    members.value = result.Data
+    selectedMember.value = members.value.find(member => member.ID === account.value?.user.user_id)?.ID || null
     try {
       const draft = JSON.parse(sessionStorage.getItem(draftKey.value) || 'null')
-      if (draft && typeof draft.text === 'string' && draft.text.length <= 4000 && Date.now() - draft.time < 86400000) { content.value = draft.text }
+      if (draft && typeof draft.text === 'string' && draft.text.length <= 4000 && Date.now() - draft.time < 86400000) {
+        content.value = draft.text
+        if (members.value.some(member => member.ID === draft.member)) { selectedMember.value = draft.member }
+      }
     } catch { /* An unavailable or malformed draft must not block the form. */ }
   } catch { error.value = '无法加载账户，请刷新重试。' } finally { loading.value = false }
 })
@@ -83,16 +102,16 @@ async function command (path: string, body?: object) {
 }
 
 async function saveEntry () {
-  if (busy.value || !account.value || !content.value.trim() || count.value > 2000) { return }
+  if (busy.value || !account.value || !selectedMember.value || !content.value.trim() || count.value > 2000) { return }
   busy.value = true; error.value = ''; saved.value = null
   try {
-    const response = await command('/api/v1/hitokoto', { Content: content.value.trim() })
+    const response = await command('/api/v1/hitokoto', { Content: content.value.trim(), UserID: selectedMember.value })
     if (response.status === 401 || response.status === 403) { expired.value = true; error.value = '请重新登录，草稿已保留在当前标签页。'; return }
     if (response.status === 409) { error.value = '这条内容已存在，输入内容已保留。'; return }
-    if (response.status === 400 || response.status === 413) { error.value = '请输入 1 到 2000 个字符。'; return }
+    if (response.status === 400 || response.status === 413) { error.value = '请检查所选成员和内容（1 到 2000 个字符）。'; return }
     if (response.status !== 201) { throw new Error('Write not confirmed') }
     const result = await response.json()
-    if (!Number.isInteger(result.Data?.ID) || result.Data.ID <= 0 || typeof result.Data.Content !== 'string') { throw new Error('Write not confirmed') }
+    if (!Number.isInteger(result.Data?.ID) || result.Data.ID <= 0 || typeof result.Data.Content !== 'string' || typeof result.Data.User?.Name !== 'string') { throw new Error('Write not confirmed') }
     saved.value = result.Data
     content.value = ''
     emit('saved')

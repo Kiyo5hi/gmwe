@@ -21,8 +21,9 @@ func TestRoundtripAndConstraints(t *testing.T) {
 	pool, _ := engine.DB()
 	defer pool.Close()
 	stamp := time.Date(2026, 1, 2, 3, 4, 5, 123000000, time.UTC)
+	actor := 2
 	input := storage.Snapshot{Users: []storage.UserRow{{ID: 2, CreatedAt: stamp, UpdatedAt: stamp, Username: "Alice", Name: "Fixture", Password: "hashed-fixture"}},
-		Hitokotos: []storage.HitokotoRow{{ID: 7, CreatedAt: stamp, UpdatedAt: stamp, Content: "caf\u00e9", UserID: 2}}, NextUserID: 9, NextHitokotoID: 20}
+		Hitokotos: []storage.HitokotoRow{{ID: 7, CreatedAt: stamp, UpdatedAt: stamp, Content: "caf\u00e9", UserID: 2, SubmittedByUserID: &actor}}, NextUserID: 9, NextHitokotoID: 20}
 	if err = storage.Import(engine, input); err != nil {
 		t.Fatal(err)
 	}

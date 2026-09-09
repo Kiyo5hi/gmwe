@@ -9,8 +9,13 @@
     </p>
     <div v-if="account" class="identity">
       <UserRound :size="40" aria-hidden="true" />
-      <div><h2>{{ account.user.name }}</h2><p>Pocket-ID</p></div>
+      <div><h2>{{ fullName }}</h2><p>Pocket-ID</p></div>
     </div>
+    <dl v-if="account" class="profile-fields">
+      <div><dt>First name</dt><dd>{{ account.profile?.first_name || '未提供' }}</dd></div>
+      <div><dt>Last name</dt><dd>{{ account.profile?.last_name || '未提供' }}</dd></div>
+    </dl>
+    <a v-if="account && !account.profile?.loaded" href="/api/auth/login" class="btn btn-ghost">同步姓名</a>
     <button v-if="account" class="btn btn-outline" :disabled="busy" @click="logout">
       <LogOut :size="18" aria-hidden="true" />{{ busy ? '退出中…' : '退出登录' }}
     </button>
@@ -19,8 +24,9 @@
 </template>
 <script setup lang="ts">
 import { LogOut, UserRound } from '@lucide/vue'
-type Account = { user: { name: string, subject: string }, csrf: string }
+type Account = { user: { name: string, subject: string }, profile?: { first_name: string, last_name: string, loaded: boolean }, csrf: string }
 const account = ref<Account | null>(null)
+const fullName = computed(() => [account.value?.profile?.first_name, account.value?.profile?.last_name].filter(Boolean).join(' ') || account.value?.user.name)
 const loading = ref(true)
 const busy = ref(false)
 const expired = ref(false)
@@ -51,5 +57,8 @@ h1 { font-size: 1.5rem; font-weight: 600; }
 h2 { font-size: 1.25rem; overflow-wrap: anywhere; }
 .identity { display: flex; align-items: center; gap: 1rem; margin: 2rem 0; }
 .identity p { opacity: 0.65; margin-top: 0.25rem; }
+.profile-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+dt { font-size: 0.875rem; opacity: 0.65; }
+dd { margin-top: 0.25rem; overflow-wrap: anywhere; }
 .btn { border-radius: 6px; gap: 0.5rem; }
 </style>

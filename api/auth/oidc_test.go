@@ -188,7 +188,7 @@ func TestLoginPKCEAndCallbackState(t *testing.T) {
 		t.Fatal(err)
 	}
 	q := u.Query()
-	if q.Get("scope") != "openid "+WriteScope+" offline_access" {
+	if q.Get("scope") != "openid profile "+WriteScope+" offline_access" {
 		t.Fatal("login requests unnecessary permissions")
 	}
 	if q.Get("code_challenge_method") != "S256" || len(q.Get("code_challenge")) < 40 || q.Get("state") == "" || q.Get("nonce") == "" || q.Get("resource") != f.a.Config.Resource || q.Get("redirect_uri") != "https://gmwe.test/api/auth/callback" {
@@ -228,7 +228,7 @@ func TestSuccessfulCallbackAndReplay(t *testing.T) {
 	q := u.Query()
 	access := f.token(t, "at+jwt", nil)
 	hash := sha256.Sum256([]byte(access))
-	id := f.token(t, "JWT", map[string]any{"aud": "gmwe", "nonce": q.Get("nonce"), "at_hash": base64.RawURLEncoding.EncodeToString(hash[:16])})
+	id := f.token(t, "JWT", map[string]any{"aud": "gmwe", "nonce": q.Get("nonce"), "at_hash": base64.RawURLEncoding.EncodeToString(hash[:16]), "given_name": "First", "family_name": "Last"})
 	calls := 0
 	*f.exchange = func(w http.ResponseWriter, req *http.Request) {
 		calls++
@@ -257,6 +257,9 @@ func TestSuccessfulCallbackAndReplay(t *testing.T) {
 	h.ServeHTTP(me, meReq)
 	if me.Code != 200 || strings.Contains(me.Body.String(), access) || !strings.Contains(me.Body.String(), `"user_id":2`) {
 		t.Fatal("invalid account response")
+	}
+	if !strings.Contains(me.Body.String(), `"first_name":"First"`) || !strings.Contains(me.Body.String(), `"last_name":"Last"`) || !strings.Contains(me.Body.String(), `"loaded":true`) {
+		t.Fatal("verified profile missing")
 	}
 	replay := httptest.NewRequest("GET", callbackURL, nil)
 	replay.AddCookie(cookie)

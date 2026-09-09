@@ -28,12 +28,13 @@ type UserRow struct {
 	Password  string
 }
 type HitokotoRow struct {
-	ID        uint
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt
-	Content   string
-	UserID    int
+	ID                uint
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	DeletedAt         gorm.DeletedAt
+	Content           string
+	UserID            int
+	SubmittedByUserID *int `json:",omitempty"`
 }
 type Snapshot struct {
 	Users          []UserRow     `json:"users"`

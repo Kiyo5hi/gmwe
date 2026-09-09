@@ -2,7 +2,7 @@
 
 GMWE is private to the two configured Pocket-ID users. The client is public,
 uses authorization code with S256 PKCE and an exact callback, and requests only
-openid, write:hitokoto and offline_access for its existing GMWE API resource.
+openid, profile, write:hitokoto and offline_access for its existing GMWE API resource.
 The refresh credential stays server-side; no client secret, pairing endpoint or
 connection download is used. Native consent is required at interactive login.
 
@@ -18,7 +18,13 @@ Unknown/retired downloads and pairing paths return 410 at Caddy.
 
 The server verifies issuer, resource, client, signature, expiry, nonce, at_hash,
 scope and the exact user allowlist. It derives authors from the configured subject
-mapping. Writes and logout require matching Origin and session-bound CSRF.
+mapping for the actual submitter. Approved writers may attribute new content to
+any existing, non-deleted application member. The chosen UserID is validated;
+SubmittedByUserID is always server-derived and cannot be supplied by the client.
+Historical rows keep null submitters rather than invented attribution. The nullable
+column is included in export/import, digest and online backups (omitted in canonical
+JSON when null to preserve historical digests). Writes and logout require matching
+Origin and session-bound CSRF.
 Sessions use SCS's official SQLite store at required SESSION_DB_PATH, separate
 from the content database. The directory/file are 0700/0600. Browser cookies are
 persistent, Secure, HttpOnly and host-only. Absolute lifetime is 30 days, with
@@ -39,7 +45,14 @@ automatically. Duplicate content is identified by the existing database constrai
 Navigation separates Home, Hitokoto (/hitokoto), Story (/our-story), and Account. Account
 only shows identity and logout; the composer lives on /hitokoto. GET
 /api/v1/hitokotos is session-protected, ordered newest first with fixed 20-row
-pages and bounded literal substring search. It provides no edit/delete operation.
+pages and bounded literal substring search. Filters accept user_id, from/to UTC
+calendar dates (both inclusive), and sort=newest/oldest. Invalid dates, reversed
+ranges, member IDs and sort options return 400; all values are bound, not SQL text.
+It provides no edit/delete operation. Composer drafts retain both content and the
+selected member; confirmed saves reset the list filters to show the new entry.
+Account displays first/last names from verified ID-token given_name/family_name
+claims, stored server-side at login. Existing sessions remain valid; use the sync
+name action to reauthenticate once for profile claims. Missing names are not guessed.
 Story has its own tab; the unused Dog breeds page and upload form are removed.
 Home has no duplicate footer navigation. Mobile uses a dynamic-viewport grid with
 four bottom tabs in a bounded row and independently scrolling page content;

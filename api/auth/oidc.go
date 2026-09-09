@@ -102,7 +102,7 @@ func NewOIDC(ctx context.Context, cfg OIDCConfig) (*OIDCAuth, error) {
 	endpoint.AuthStyle = oauth2.AuthStyleInParams
 	return &OIDCAuth{Config: cfg, Sessions: sessions, httpClient: httpClient, loginLimit: rate.NewLimiter(rate.Every(10*time.Second), 10),
 		client: &oauth2.Config{ClientID: cfg.ClientID, Endpoint: endpoint,
-			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, WriteScope, oidc.ScopeOfflineAccess}},
+			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, "profile", WriteScope, oidc.ScopeOfflineAccess}},
 		idVerifier:  provider.Verifier(&oidc.Config{ClientID: cfg.ClientID, SupportedSigningAlgs: []string{"RS256"}}),
 		apiVerifier: provider.Verifier(&oidc.Config{ClientID: cfg.Resource, SupportedSigningAlgs: []string{"RS256"}})}, nil
 }
@@ -212,7 +212,9 @@ func (a *OIDCAuth) Routes(r *gin.Engine) {
 		c.Status(204)
 	})
 	group.GET("/me", a.RequireWriter(), func(c *gin.Context) {
-		c.JSON(200, gin.H{"user": c.MustGet("writer"), "csrf": a.Sessions.GetString(c.Request.Context(), "csrf")})
+		ctx := c.Request.Context()
+		c.JSON(200, gin.H{"user": c.MustGet("writer"), "csrf": a.Sessions.GetString(ctx, "csrf"),
+			"profile": gin.H{"first_name": a.Sessions.GetString(ctx, "first_name"), "last_name": a.Sessions.GetString(ctx, "last_name"), "loaded": a.Sessions.GetBool(ctx, "profile_loaded")}})
 	})
 	group.POST("/logout", a.RequireWriter(), func(c *gin.Context) {
 		if err := a.Sessions.Destroy(c.Request.Context()); err != nil {
@@ -283,6 +285,17 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 		c.AbortWithStatus(500)
 		return
 	}
+	var profile struct {
+		FirstName string `json:"given_name"`
+		LastName  string `json:"family_name"`
+	}
+	if id.Claims(&profile) != nil {
+		c.AbortWithStatus(401)
+		return
+	}
+	a.Sessions.Put(ctx, "first_name", strings.TrimSpace(profile.FirstName))
+	a.Sessions.Put(ctx, "last_name", strings.TrimSpace(profile.LastName))
+	a.Sessions.Put(ctx, "profile_loaded", true)
 	a.Sessions.Put(ctx, "access", token.AccessToken)
 	a.Sessions.Put(ctx, "refresh", token.RefreshToken)
 	a.Sessions.Put(ctx, "subject", writer.Subject)
