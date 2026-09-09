@@ -11,6 +11,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -70,13 +71,14 @@ func LoadOIDCConfig(path string) (OIDCConfig, error) {
 }
 
 type OIDCAuth struct {
-	Config      OIDCConfig
-	Sessions    *scs.SessionManager
-	client      *oauth2.Config
-	idVerifier  *oidc.IDTokenVerifier
-	apiVerifier *oidc.IDTokenVerifier
-	httpClient  *http.Client
-	loginLimit  *rate.Limiter
+	Config       OIDCConfig
+	Sessions     *scs.SessionManager
+	client       *oauth2.Config
+	idVerifier   *oidc.IDTokenVerifier
+	apiVerifier  *oidc.IDTokenVerifier
+	httpClient   *http.Client
+	loginLimit   *rate.Limiter
+	sessionLocks [64]sync.Mutex
 }
 
 func NewOIDC(ctx context.Context, cfg OIDCConfig) (*OIDCAuth, error) {
@@ -87,19 +89,20 @@ func NewOIDC(ctx context.Context, cfg OIDCConfig) (*OIDCAuth, error) {
 		return nil, errors.New("OIDC discovery failed")
 	}
 	sessions := scs.New()
-	sessions.Lifetime = time.Hour
+	sessions.Lifetime = sessionLifetime
+	sessions.IdleTimeout = 7 * 24 * time.Hour
 	sessions.Cookie.Name = "__Host-gmwe"
 	sessions.Cookie.Secure = true
 	sessions.Cookie.HttpOnly = true
 	sessions.Cookie.SameSite = http.SameSiteLaxMode
-	sessions.Cookie.Persist = false
+	sessions.Cookie.Persist = true
 	sessions.HashTokenInStore = true
 	sessions.ErrorFunc = func(w http.ResponseWriter, r *http.Request, err error) { http.Error(w, "Session unavailable", 503) }
 	endpoint := provider.Endpoint()
 	endpoint.AuthStyle = oauth2.AuthStyleInParams
 	return &OIDCAuth{Config: cfg, Sessions: sessions, httpClient: httpClient, loginLimit: rate.NewLimiter(rate.Every(10*time.Second), 10),
 		client: &oauth2.Config{ClientID: cfg.ClientID, Endpoint: endpoint,
-			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, WriteScope}},
+			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, WriteScope, oidc.ScopeOfflineAccess}},
 		idVerifier:  provider.Verifier(&oidc.Config{ClientID: cfg.ClientID, SupportedSigningAlgs: []string{"RS256"}}),
 		apiVerifier: provider.Verifier(&oidc.Config{ClientID: cfg.Resource, SupportedSigningAlgs: []string{"RS256"}})}, nil
 }
@@ -162,8 +165,12 @@ func (a *OIDCAuth) RequireWriter() gin.HandlerFunc {
 			c.AbortWithStatus(403)
 			return
 		}
-		writer, err := a.VerifyAccess(c.Request.Context(), raw)
+		writer, err := a.sessionWriter(c.Request.Context())
 		if err != nil {
+			if errors.Is(err, errSessionUnavailable) {
+				c.AbortWithStatus(503)
+				return
+			}
 			c.AbortWithStatus(401)
 			return
 		}
@@ -189,9 +196,16 @@ func (a *OIDCAuth) Routes(r *gin.Engine) {
 	group.GET("/login", a.login)
 	group.GET("/callback", a.callback)
 	group.GET("/page-access", func(c *gin.Context) {
-		raw := a.Sessions.GetString(c.Request.Context(), "access")
-		_, err := a.VerifyAccess(c.Request.Context(), raw)
-		if err != nil || c.GetHeader("Authorization") != "" {
+		if c.GetHeader("Authorization") != "" {
+			c.Redirect(302, "/login")
+			return
+		}
+		_, err := a.sessionWriter(c.Request.Context())
+		if errors.Is(err, errSessionUnavailable) {
+			c.AbortWithStatus(503)
+			return
+		}
+		if err != nil {
 			c.Redirect(302, "/login")
 			return
 		}
@@ -225,8 +239,9 @@ func (a *OIDCAuth) authorizationURL(ctx context.Context) string {
 	a.Sessions.Put(ctx, "nonce", nonce)
 	a.Sessions.Put(ctx, "verifier", verifier)
 	a.Sessions.Put(ctx, "login_time", time.Now().Unix())
+	a.Sessions.SetDeadline(ctx, time.Now().Add(10*time.Minute))
 	options := []oauth2.AuthCodeOption{oidc.Nonce(nonce), oauth2.S256ChallengeOption(verifier),
-		oauth2.SetAuthURLParam("resource", a.Config.Resource)}
+		oauth2.SetAuthURLParam("resource", a.Config.Resource), oauth2.SetAuthURLParam("prompt", "consent")}
 	return a.client.AuthCodeURL(state, options...)
 }
 
@@ -260,7 +275,7 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 		return
 	}
 	writer, err := a.VerifyAccess(ctx, token.AccessToken)
-	if err != nil || writer.Subject != id.Subject {
+	if err != nil || writer.Subject != id.Subject || token.RefreshToken == "" {
 		c.AbortWithStatus(403)
 		return
 	}
@@ -269,6 +284,9 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 		return
 	}
 	a.Sessions.Put(ctx, "access", token.AccessToken)
+	a.Sessions.Put(ctx, "refresh", token.RefreshToken)
+	a.Sessions.Put(ctx, "subject", writer.Subject)
+	a.Sessions.SetDeadline(ctx, time.Now().Add(sessionLifetime))
 	a.Sessions.Put(ctx, "csrf", oauth2.GenerateVerifier())
 	c.Redirect(303, "/account")
 }

@@ -11,7 +11,8 @@
     handle /login {
         reverse_proxy localhost:8080
     }
-    handle /gmwe.webp {
+  @publicAssets path /gmwe.webp /manifest.webmanifest /sw.js /pwa.js /pwa-180.png /pwa-192.png /pwa-512.png
+  handle @publicAssets {
         root * /app/client
         file_server
     }

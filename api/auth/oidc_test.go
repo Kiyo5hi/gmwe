@@ -188,7 +188,7 @@ func TestLoginPKCEAndCallbackState(t *testing.T) {
 		t.Fatal(err)
 	}
 	q := u.Query()
-	if q.Get("scope") != "openid "+WriteScope {
+	if q.Get("scope") != "openid "+WriteScope+" offline_access" {
 		t.Fatal("login requests unnecessary permissions")
 	}
 	if q.Get("code_challenge_method") != "S256" || len(q.Get("code_challenge")) < 40 || q.Get("state") == "" || q.Get("nonce") == "" || q.Get("resource") != f.a.Config.Resource || q.Get("redirect_uri") != "https://gmwe.test/api/auth/callback" {
@@ -237,7 +237,7 @@ func TestSuccessfulCallbackAndReplay(t *testing.T) {
 		if req.Form.Get("client_secret") != "" || req.Form.Get("client_id") != "gmwe" || req.Form.Get("resource") != f.a.Config.Resource || base64.RawURLEncoding.EncodeToString(challenge[:]) != q.Get("code_challenge") {
 			t.Error("incorrect PKCE exchange")
 		}
-		json.NewEncoder(w).Encode(map[string]any{"access_token": access, "id_token": id, "token_type": "Bearer", "expires_in": 3600})
+		json.NewEncoder(w).Encode(map[string]any{"access_token": access, "refresh_token": "fixture-refresh", "id_token": id, "token_type": "Bearer", "expires_in": 3600})
 	}
 	callbackURL := "https://gmwe.test/api/auth/callback?code=test&state=" + q.Get("state") + "&iss=" + url.QueryEscape(f.issuer)
 	req := httptest.NewRequest("GET", callbackURL, nil)

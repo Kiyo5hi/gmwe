@@ -42,6 +42,15 @@ func main() {
 		if err != nil {
 			panic("OIDC initialization failed")
 		}
+		path := os.Getenv("SESSION_DB_PATH")
+		if path == "" {
+			panic("SESSION_DB_PATH is required for persistent authentication")
+		}
+		closeSessions, err := login.PersistSessions(path)
+		if err != nil {
+			panic("session storage initialization failed")
+		}
+		defer closeSessions()
 		login.Routes(r)
 	}
 	v1 := r.Group("/api/v1")
@@ -59,7 +68,7 @@ func main() {
 
 	var handler http.Handler = r
 	if login != nil {
-		handler = login.Sessions.LoadAndSave(r)
+		handler = login.Middleware(r)
 	}
 	server := &http.Server{Addr: fmt.Sprintf("127.0.0.1:%s", consts.PORT), Handler: handler,
 		ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second,

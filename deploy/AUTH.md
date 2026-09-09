@@ -2,10 +2,12 @@
 
 GMWE is private to the two configured Pocket-ID users. The client is public,
 uses authorization code with S256 PKCE and an exact callback, and requests only
-openid and write:hitokoto for its existing GMWE API resource. No client secret,
-offline_access, pairing endpoint or connection download is used.
+openid, write:hitokoto and offline_access for its existing GMWE API resource.
+The refresh credential stays server-side; no client secret, pairing endpoint or
+connection download is used. Native consent is required at interactive login.
 
-Caddy serves only /login and the non-sensitive /gmwe.webp logo without a session.
+Caddy serves /login, the non-sensitive logo and exact PWA manifest/icon/worker
+paths without a session; see the explicit matcher in deploy/Caddyfile.
 All other static files, including JavaScript, photographs and music, use its
 native forward_auth check at /api/auth/page-access. Failed checks redirect to
 /login; private responses are no-store. API data reads and writes independently
@@ -17,7 +19,18 @@ Unknown/retired downloads and pairing paths return 410 at Caddy.
 The server verifies issuer, resource, client, signature, expiry, nonce, at_hash,
 scope and the exact user allowlist. It derives authors from the configured subject
 mapping. Writes and logout require matching Origin and session-bound CSRF.
-Sessions are in memory and expire within an hour; a restart requires login again.
+Sessions use SCS's official SQLite store at required SESSION_DB_PATH, separate
+from the content database. The directory/file are 0700/0600. Browser cookies are
+persistent, Secure, HttpOnly and host-only. Absolute lifetime is 30 days, with
+seven days of inactivity ending a session sooner. OAuth access expiry is still
+enforced: the server renews via Pocket-ID and rechecks subject/client/scope/audience.
+Per-session request locking covers load, rotation, save and logout in this
+single-instance deployment. Revoked refresh grants end the session; transient
+provider failures return 503, not anonymous access or silent write retries.
+Logout destroys the local session immediately. It does not sign out Pocket-ID
+globally. Server restarts retain sessions; copying/restoring the session database
+can restore credentials, so exclude it from exported content and clear it during
+disaster recovery unless deliberately retaining authenticated device sessions.
 Revocation of provider membership is not instantaneous for an already-issued
 session token: remove the local subject mapping and restart for emergency denial.
 
@@ -39,3 +52,15 @@ candidate checks use an online database copy; production verification must asser
 private page redirects, denied data reads/writes and retired downloads, not just
 the public liveness response. Real Passkey login and intended user submission
 remain separate acceptance steps. Never generate admin sessions to bypass them.
+
+## Home Screen App
+
+The manifest uses standalone mode and a root start URL. Icons are reproducibly
+generated from the existing logo by sharp during generate/build/dev. Login also
+includes the manifest and Apple touch icon, so installation needs no bypass.
+The service worker is network-only, with a generic offline navigation response.
+It never caches content, auth replies or writes, and has no background sync.
+Cookie persistence is separate from PWA installation; clearing device website
+data or provider revocation can still require login. On iPhone, add GMWE to the
+Home Screen and complete login inside that installed app. Real iPhone relaunch
+and renewal are acceptance steps, not covered by desktop browser emulation.

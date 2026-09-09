@@ -2,6 +2,9 @@
   "private": true,
   "packageManager": "npm@11.19.1",
   "scripts": {
+    "pregenerate": "node scripts/pwa-icons.mjs",
+    "prebuild": "node scripts/pwa-icons.mjs",
+    "predev": "node scripts/pwa-icons.mjs",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -14,6 +17,7 @@
     "@nuxtjs/tailwindcss": "^6.2.0",
     "eslint": "^8.31.0",
     "nuxt": "3.21.11",
+    "sharp": "0.35.4",
     "typescript": "^4.9.4"
   },
   "dependencies": {

@@ -65,3 +65,6 @@ Temporary Items
 
 # go-delve
 __debug_bin
+
+# Generated from the tracked logo by client/scripts/pwa-icons.mjs.
+/client/public/pwa-*.png
