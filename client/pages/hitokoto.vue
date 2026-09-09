@@ -144,7 +144,7 @@ function resetFilters () { query.value = ''; member.value = ''; from.value = '';
 function entrySaved () { resetFilters() }
 </script>
 <style scoped>
-.hitokoto-page { max-width: 46rem; margin: 0 auto; min-width: 0; }
+.hitokoto-page { width: 100%; max-width: 46rem; margin: 0 auto; min-width: 0; }
 .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 h1 { font-size: 1.5rem; font-weight: 600; }
 .page-heading p { margin-top: 0.25rem; opacity: 0.65; }
@@ -154,6 +154,8 @@ h1 { font-size: 1.5rem; font-weight: 600; }
 .filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 1rem 0; }
 .filters label { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; font-size: 0.875rem; }
 .filters input, .filters select { width: 100%; min-width: 0; max-width: 100%; border-radius: 6px; }
+.date-filter input { display: block; appearance: none; -webkit-appearance: none; box-sizing: border-box; min-inline-size: 0; inline-size: 100%; max-inline-size: 100%; }
+.date-filter input::-webkit-date-and-time-value { min-width: 0; text-align: left; }
 .filter-actions { grid-column: 1 / -1; display: flex; gap: 0.5rem; }
 @media (max-width: 480px) { .date-filter { grid-column: 1 / -1; } }
 .entry-list { list-style: none; }
