@@ -16,14 +16,6 @@
     <div class="h-48 w-full sm:w-96">
       <MusicPlayer name="暗號" artist="Jay Chou" url="music.mp3" cover="cover.webp" />
     </div>
-    <nav class="flex flex-wrap justify-center gap-6 mt-6" aria-label="更多内容">
-      <NuxtLink to="/our-story" class="link">
-        Our story
-      </NuxtLink>
-      <NuxtLink to="/dog-breeds" class="link">
-        Dog breeds
-      </NuxtLink>
-    </nav>
   </div>
 </template>
 

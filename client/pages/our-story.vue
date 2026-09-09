@@ -1,5 +1,8 @@
 <template>
   <div class="flex flex-col items-center">
+    <h1 class="text-2xl font-semibold mb-6">
+      Our story
+    </h1>
     <ul class="steps steps-vertical">
       <li v-for="event in events" :key="event.event" data-content="●" class="step step-primary">
         <div class="flex flex-row items-center text-left">
@@ -12,6 +15,7 @@
 </template>
 
 <script lang="ts" setup>
+useHead({ title: 'Story | GMWE' })
 const events = [{
   date: '2022-06-18',
   event: '初识'

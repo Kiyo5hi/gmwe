@@ -36,11 +36,12 @@ session token: remove the local subject mapping and restart for emergency denial
 
 The submission page preserves unsuccessful input and never retries writes
 automatically. Duplicate content is identified by the existing database constraint.
-Navigation separates Home, /hitokoto (displayed as 一言), and Account. Account
+Navigation separates Home, Hitokoto (/hitokoto), Story (/our-story), and Account. Account
 only shows identity and logout; the composer lives on /hitokoto. GET
 /api/v1/hitokotos is session-protected, ordered newest first with fixed 20-row
 pages and bounded literal substring search. It provides no edit/delete operation.
-Existing story pages remain reachable from Home. Mobile uses fixed bottom tabs;
+Story has its own tab; the unused Dog breeds page and upload form are removed.
+Home has no duplicate footer navigation. Mobile uses four fixed bottom tabs;
 desktop uses the same routes above the page. Drafts survive switching tabs.
 The last confirmed entry is shown only after a valid 201 response with its ID.
 Drafts are per-account, tab-scoped sessionStorage (no tokens), restored for up to
