@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { House, Quote, UserRound } from '@lucide/vue'
 const route = useRoute()
-const items = [{ path: '/', label: 'Home', icon: House }, { path: '/hitokoto', label: '一言', icon: Quote }, { path: '/account', label: 'Account', icon: UserRound }]
+const items = [{ path: '/', label: 'Home', icon: House }, { path: '/hitokoto', label: 'Hitokoto', icon: Quote }, { path: '/account', label: 'Account', icon: UserRound }]
 const active = (path: string) => route.path.replace(/\/$/, '') === path.replace(/\/$/, '')
 </script>
 <style scoped>

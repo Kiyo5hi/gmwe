@@ -3,7 +3,7 @@
     <header class="account-heading">
       <img src="/gmwe.webp" alt="GMWE" width="56" height="56">
       <div>
-        <h2>新增一言</h2><p v-if="account">
+        <h2>新增 Hitokoto</h2><p v-if="account">
           {{ account.user.name }}
         </p>
       </div>
@@ -31,7 +31,7 @@
       <div class="account-actions">
         <span id="entry-count" :class="{ 'text-error': count > 2000 }">{{ count }} / 2000</span>
         <button class="btn btn-primary" :disabled="busy || loading || expired || !account || !content.trim() || count > 2000">
-          {{ busy ? '保存中…' : '保存一言' }}
+          {{ busy ? '保存中…' : '保存' }}
         </button>
       </div>
     </form>
@@ -88,7 +88,7 @@ async function saveEntry () {
   try {
     const response = await command('/api/v1/hitokoto', { Content: content.value.trim() })
     if (response.status === 401 || response.status === 403) { expired.value = true; error.value = '请重新登录，草稿已保留在当前标签页。'; return }
-    if (response.status === 409) { error.value = '这条一言已存在，输入内容已保留。'; return }
+    if (response.status === 409) { error.value = '这条内容已存在，输入内容已保留。'; return }
     if (response.status === 400 || response.status === 413) { error.value = '请输入 1 到 2000 个字符。'; return }
     if (response.status !== 201) { throw new Error('Write not confirmed') }
     const result = await response.json()

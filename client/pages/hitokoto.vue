@@ -1,23 +1,23 @@
 <template>
   <section class="hitokoto-page">
     <header class="page-heading">
-      <div><h1>一言</h1><p>{{ total }} 条</p></div>
+      <div><h1>Hitokoto</h1><p>{{ total }} 条</p></div>
       <button class="btn btn-primary" :aria-expanded="composing" aria-controls="entry-composer" @click="composing = !composing">
-        <component :is="composing ? X : Plus" :size="18" aria-hidden="true" />{{ composing ? '收起' : '新增一言' }}
+        <component :is="composing ? X : Plus" :size="18" aria-hidden="true" />{{ composing ? '收起' : '新增' }}
       </button>
     </header>
     <div v-show="composing" id="entry-composer">
       <EntryComposer @saved="entrySaved" />
     </div>
     <form class="search-form" role="search" @submit.prevent="search">
-      <label class="sr-only" for="entry-search">搜索一言</label>
+      <label class="sr-only" for="entry-search">搜索 Hitokoto</label>
       <input
         id="entry-search"
         v-model="query"
         type="search"
         maxlength="100"
         class="input input-bordered"
-        placeholder="搜索一言"
+        placeholder="搜索 Hitokoto"
         :disabled="pending"
       >
       <button class="btn btn-square" :disabled="pending" aria-label="搜索" title="搜索">
@@ -37,7 +37,7 @@
       </button>
     </div>
     <p v-else-if="!entries.length" role="status" class="status">
-      {{ appliedQuery ? '没有找到匹配的一言。' : '还没有一言。' }}
+      {{ appliedQuery ? '没有找到匹配的内容。' : '还没有内容。' }}
     </p>
     <ol v-else class="entry-list" :aria-busy="pending">
       <li v-for="entry in entries" :key="entry.ID">
@@ -47,7 +47,7 @@
         <footer><span>{{ entry.User.Name }}</span><time :datetime="entry.CreatedAt">{{ formatDate(entry.CreatedAt) }}</time><span>#{{ entry.ID }}</span></footer>
       </li>
     </ol>
-    <nav class="pagination" aria-label="一言分页">
+    <nav class="pagination" aria-label="Hitokoto 分页">
       <button class="btn btn-square btn-ghost" :disabled="pending || page <= 1" aria-label="上一页" title="上一页" @click="loadPage(page - 1)">
         <ChevronLeft :size="22" />
       </button>
@@ -71,7 +71,7 @@ const error = ref('')
 const expired = ref(false)
 const composing = ref(false)
 let request = 0
-useHead({ title: '一言 | GMWE' })
+useHead({ title: 'Hitokoto | GMWE' })
 const formatDate = (value: string) => new Date(value).toLocaleDateString('zh-CN')
 onMounted(() => loadPage(1))
 onBeforeUnmount(() => { request++ })
@@ -89,7 +89,7 @@ async function loadPage (number: number) {
     if (!Array.isArray(result.Data) || !Number.isInteger(result.Total)) { throw new TypeError('Invalid list response') }
     entries.value = result.Data; total.value = result.Total; page.value = number
   } catch {
-    if (current === request) { error.value = expired.value ? '请重新登录。' : '无法加载一言，请重试。' }
+    if (current === request) { error.value = expired.value ? '请重新登录。' : '无法加载内容，请重试。' }
   } finally { if (current === request) { pending.value = false } }
 }
 function search () { appliedQuery.value = query.value.trim(); loadPage(1) }
