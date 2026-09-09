@@ -94,7 +94,7 @@ func TestPersistentSessionRefreshAndLogout(t *testing.T) {
 }
 
 func TestRenewalFailureBoundaries(t *testing.T) {
-	for _, mode := range []string{"outage", "revoked", "wrong-subject"} {
+	for _, mode := range []string{"outage", "revoked", "access-denied", "wrong-subject"} {
 		t.Run(mode, func(t *testing.T) {
 			f := newFixture(t)
 			expired := f.token(t, "at+jwt", map[string]any{"exp": time.Now().Add(-time.Minute).Unix()})
@@ -105,6 +105,9 @@ func TestRenewalFailureBoundaries(t *testing.T) {
 				case "revoked":
 					w.WriteHeader(400)
 					w.Write([]byte(`{"error":"invalid_grant"}`))
+				case "access-denied":
+					w.WriteHeader(403)
+					w.Write([]byte(`{"error":"access_denied"}`))
 				default:
 					json.NewEncoder(w).Encode(map[string]any{"access_token": f.token(t, "at+jwt", map[string]any{"sub": "other"}), "refresh_token": "rotated", "token_type": "Bearer"})
 				}

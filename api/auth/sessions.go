@@ -81,7 +81,8 @@ func (a *OIDCAuth) sessionWriter(ctx context.Context) (Writer, error) {
 	token, err := a.client.TokenSource(a.context(ctx), &oauth2.Token{RefreshToken: refresh}).Token()
 	if err != nil {
 		var rejection *oauth2.RetrieveError
-		if errors.As(err, &rejection) && rejection.ErrorCode == "invalid_grant" {
+		if errors.As(err, &rejection) && rejection.Response != nil &&
+			(rejection.Response.StatusCode == 400 || rejection.Response.StatusCode == 401 || rejection.Response.StatusCode == 403) {
 			if a.Sessions.Destroy(ctx) != nil {
 				return Writer{}, errSessionUnavailable
 			}
