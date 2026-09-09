@@ -35,8 +35,10 @@ configuration and restarting GMWE, or restoring the reverse-proxy write gate.
 
 ## Apple Shortcuts
 
-`/account` provides device authorization for a signed-in writer. Authorize with
-the same Pocket-ID user, then download `gmwe-shortcut.json`. It contains a native
+`/account` starts authorization-code + S256 PKCE pairing for a signed-in writer.
+It explicitly requests consent for `openid offline_access write:hitokoto` with
+the exact API resource. Authorize with the same Pocket-ID user; the verified
+callback downloads `gmwe-shortcut.json` directly. It contains a native
 Pocket-ID refresh token, not a GMWE API key. Treat the file as a password: keep it
 in private device storage, not Git, messages, shared folders, or request logs.
 Pair each device separately. Never share one rotating refresh token between
@@ -55,9 +57,15 @@ The Shortcut must perform these operations:
 5. Treat HTTP 201 as success, 409 as duplicate. On OAuth failure, re-pair rather
    than falling back to anonymous writes. Do not blindly retry a failed write.
 
-Pairing endpoints require a web session and CSRF token, never only an API bearer.
-Device codes/refresh tokens stay out of URLs and application logs. Polling checks
-the original device-code deadline and rejects authorization by another writer.
+Pairing-start requires a web session and CSRF token, never only an API bearer.
+State, nonce and the PKCE verifier expire after ten minutes and are consumed on
+callback. The original writer subject must match both validated tokens. Refresh
+tokens stay out of URLs and application logs and are not persisted by GMWE.
+The legacy device polling endpoint returns 410 to authenticated callers.
+Pocket-ID 2.14.0's Fosite device request sanitization drops `resource` before
+storage, causing custom API scopes to fail on its device-info page. Pairing uses
+the ordinary supported browser flow instead, without patching the provider or
+weakening the resource/scope/user checks.
 The connection file is configuration, not an installable Apple `.shortcut` file;
 the actual Shortcut must still be updated and tested on the operator's device.
 

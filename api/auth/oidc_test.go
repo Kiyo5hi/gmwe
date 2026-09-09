@@ -267,25 +267,27 @@ func TestSuccessfulCallbackAndReplay(t *testing.T) {
 	}
 }
 
-func TestDevicePairingIsBoundToWebUser(t *testing.T) {
+func TestShortcutPairingIsBoundToWebUser(t *testing.T) {
 	for _, wrongUser := range []bool{false, true} {
 		t.Run(map[bool]string{false: "same user", true: "different user"}[wrongUser], func(t *testing.T) {
 			f := newFixture(t)
 			f.a.Config.Writers = append(f.a.Config.Writers, Writer{Subject: "second", UserID: 1, Name: "second"})
+			var q url.Values
 			*f.exchange = func(w http.ResponseWriter, r *http.Request) {
 				r.ParseForm()
-				if r.Form.Get("scope") != "openid offline_access "+WriteScope || r.Form.Get("resource") != f.a.Config.Resource {
-					t.Error("device scope or resource mismatch")
-				}
-				if r.URL.Path == "/device" {
-					json.NewEncoder(w).Encode(map[string]any{"device_code": "test-device", "user_code": "TEST", "verification_uri": f.issuer + "/verify", "expires_in": 60, "interval": 1})
-					return
+				challenge := sha256.Sum256([]byte(r.Form.Get("code_verifier")))
+				if r.URL.Path != "/token" || r.Form.Get("grant_type") != "authorization_code" ||
+					r.Form.Get("resource") != f.a.Config.Resource || base64.RawURLEncoding.EncodeToString(challenge[:]) != q.Get("code_challenge") {
+					t.Error("wrong pairing exchange")
 				}
 				sub := "allowed"
 				if wrongUser {
 					sub = "second"
 				}
-				json.NewEncoder(w).Encode(map[string]any{"access_token": f.token(t, "at+jwt", map[string]any{"sub": sub}), "refresh_token": "fixture-only", "token_type": "Bearer", "expires_in": 3600})
+				access := f.token(t, "at+jwt", map[string]any{"sub": sub})
+				hash := sha256.Sum256([]byte(access))
+				id := f.token(t, "JWT", map[string]any{"aud": "gmwe", "sub": sub, "nonce": q.Get("nonce"), "at_hash": base64.RawURLEncoding.EncodeToString(hash[:16])})
+				json.NewEncoder(w).Encode(map[string]any{"access_token": access, "id_token": id, "refresh_token": "fixture-only", "token_type": "Bearer", "expires_in": 3600})
 			}
 			r := gin.New()
 			f.a.Routes(r)
@@ -312,9 +314,27 @@ func TestDevicePairingIsBoundToWebUser(t *testing.T) {
 			}
 			start := post("start")
 			if start.Code != 200 || strings.Contains(start.Body.String(), "device_code") {
-				t.Fatal("device start failed or leaked device credential")
+				t.Fatal("pairing start failed")
 			}
-			finish := post("finish")
+			var body map[string]string
+			json.Unmarshal(start.Body.Bytes(), &body)
+			u, _ := url.Parse(body["authorization_url"])
+			q = u.Query()
+			if q.Get("scope") != "openid offline_access "+WriteScope || q.Get("resource") != f.a.Config.Resource || q.Get("prompt") != "consent" || q.Get("code_challenge_method") != "S256" {
+				t.Fatal("pairing grant is not narrowly scoped PKCE with consent")
+			}
+			callbackURL := "https://gmwe.test/api/auth/callback?code=test&state=" + q.Get("state") + "&iss=" + url.QueryEscape(f.issuer)
+			callback := func() *httptest.ResponseRecorder {
+				req := httptest.NewRequest("GET", callbackURL, nil)
+				req.AddCookie(cookie)
+				w := httptest.NewRecorder()
+				h.ServeHTTP(w, req)
+				if len(w.Result().Cookies()) > 0 {
+					cookie = w.Result().Cookies()[0]
+				}
+				return w
+			}
+			finish := callback()
 			want := 200
 			if wrongUser {
 				want = 403
@@ -328,8 +348,8 @@ func TestDevicePairingIsBoundToWebUser(t *testing.T) {
 			if !wrongUser && (!strings.Contains(finish.Body.String(), "fixture-only") || !strings.Contains(finish.Header().Get("Cache-Control"), "no-store")) {
 				t.Fatal("missing native credential or cache protection")
 			}
-			if post("finish").Code != 400 {
-				t.Fatal("device result can be replayed")
+			if callback().Code != 400 {
+				t.Fatal("pairing callback can be replayed")
 			}
 		})
 	}

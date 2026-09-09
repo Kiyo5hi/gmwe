@@ -42,19 +42,9 @@
       </form>
       <section class="account-section">
         <h2>Apple Shortcuts</h2>
-        <button v-if="!pairing" class="btn btn-outline" :disabled="busy" @click="startPairing">
+        <button class="btn btn-outline" :disabled="busy" @click="startPairing">
           Connect Shortcut
         </button>
-        <template v-else>
-          <label for="device-code">Authorization code</label>
-          <input id="device-code" class="input input-bordered device-code" :value="pairing.user_code" readonly>
-          <div class="account-actions">
-            <a class="btn btn-outline" :href="pairing.verification_uri" target="_blank" rel="noopener noreferrer">Authorize in Pocket-ID</a>
-            <button class="btn btn-primary" :disabled="busy" @click="finishPairing">
-              {{ busy ? 'Checking...' : 'Download connection' }}
-            </button>
-          </div>
-        </template>
       </section>
     </template>
   </main>
@@ -62,9 +52,7 @@
 
 <script setup lang="ts">
 type Account = { user: { name: string }, csrf: string }
-type Pairing = { verification_uri: string, user_code: string }
 const account = ref<Account | null>(null)
-const pairing = ref<Pairing | null>(null)
 const content = ref('')
 const error = ref('')
 const notice = ref('')
@@ -90,7 +78,7 @@ async function perform (action: () => Promise<void>) {
 }
 
 function failed (status: number) {
-  if (status === 401) { account.value = null; pairing.value = null; error.value = 'Your session has ended. Please sign in again.' } else if (status === 403) { error.value = 'This request was not authorized.' } else if (status === 409) { error.value = 'Already exists or is in progress.' } else { error.value = 'Could not complete the request. Please try again.' }
+  if (status === 401) { account.value = null; error.value = 'Your session has ended. Please sign in again.' } else if (status === 403) { error.value = 'This request was not authorized.' } else if (status === 409) { error.value = 'Already exists or is in progress.' } else { error.value = 'Could not complete the request. Please try again.' }
 }
 
 async function saveEntry () {
@@ -105,7 +93,7 @@ async function logout () {
   await perform(async () => {
     const response = await command('/api/auth/logout')
     if (!response.ok) { failed(response.status); return }
-    account.value = null; pairing.value = null
+    account.value = null
   })
 }
 
@@ -113,21 +101,10 @@ async function startPairing () {
   await perform(async () => {
     const response = await command('/api/auth/shortcut/start')
     if (!response.ok) { failed(response.status); return }
-    pairing.value = await response.json()
-  })
-}
-
-async function finishPairing () {
-  await perform(async () => {
-    const response = await command('/api/auth/shortcut/finish')
-    if (response.status === 202) { notice.value = 'Waiting for authorization.'; return }
-    if (!response.ok) { pairing.value = null; failed(response.status); return }
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url; link.download = 'gmwe-shortcut.json'; link.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-    pairing.value = null; notice.value = 'Connection downloaded.'
+    const result = await response.json()
+    const target = new URL(result.authorization_url)
+    if (target.protocol !== 'https:') { throw new Error('Invalid authorization URL') }
+    window.location.assign(target.href)
   })
 }
 </script>
@@ -141,6 +118,5 @@ h2 { font-size: 1.125rem; font-weight: 600; }
 .account-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid currentColor; display: flex; flex-direction: column; gap: 0.75rem; }
 .account-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .account-page .btn { white-space: normal; height: auto; min-height: 3rem; padding: 0.65rem 1rem; border-radius: 0.5rem; }
-.device-code { font-family: monospace; width: 100%; }
 .account-page textarea { width: 100%; resize: vertical; }
 </style>

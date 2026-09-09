@@ -10,7 +10,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -73,7 +72,6 @@ type OIDCAuth struct {
 	idVerifier  *oidc.IDTokenVerifier
 	apiVerifier *oidc.IDTokenVerifier
 	httpClient  *http.Client
-	deviceMu    sync.Mutex
 	loginLimit  *rate.Limiter
 }
 
@@ -198,8 +196,8 @@ func (a *OIDCAuth) Routes(r *gin.Engine) {
 		}
 		c.Status(204)
 	})
-	group.POST("/shortcut/start", a.RequireWriter(true), a.startDevice)
-	group.POST("/shortcut/finish", a.RequireWriter(true), a.finishDevice)
+	group.POST("/shortcut/start", a.RequireWriter(true), a.startShortcut)
+	group.POST("/shortcut/finish", a.RequireWriter(true), func(c *gin.Context) { c.Status(410) })
 }
 
 func (a *OIDCAuth) login(c *gin.Context) {
@@ -208,15 +206,24 @@ func (a *OIDCAuth) login(c *gin.Context) {
 		c.AbortWithStatus(429)
 		return
 	}
-	ctx := c.Request.Context()
+	c.Redirect(302, a.authorizationURL(c.Request.Context(), ""))
+}
+
+func (a *OIDCAuth) authorizationURL(ctx context.Context, pairingSubject string) string {
 	// SCS keeps PKCE/state server-side; only an opaque host-only cookie reaches the browser.
 	state, nonce, verifier := oauth2.GenerateVerifier(), oauth2.GenerateVerifier(), oauth2.GenerateVerifier()
 	a.Sessions.Put(ctx, "state", state)
 	a.Sessions.Put(ctx, "nonce", nonce)
 	a.Sessions.Put(ctx, "verifier", verifier)
 	a.Sessions.Put(ctx, "login_time", time.Now().Unix())
-	c.Redirect(302, a.client.AuthCodeURL(state, oidc.Nonce(nonce), oauth2.S256ChallengeOption(verifier),
-		oauth2.SetAuthURLParam("resource", a.Config.Resource)))
+	a.Sessions.Put(ctx, "pairing_subject", pairingSubject)
+	options := []oauth2.AuthCodeOption{oidc.Nonce(nonce), oauth2.S256ChallengeOption(verifier),
+		oauth2.SetAuthURLParam("resource", a.Config.Resource)}
+	if pairingSubject != "" {
+		options = append(options, oauth2.SetAuthURLParam("scope", "openid offline_access "+WriteScope),
+			oauth2.SetAuthURLParam("prompt", "consent"))
+	}
+	return a.client.AuthCodeURL(state, options...)
 }
 
 func (a *OIDCAuth) callback(c *gin.Context) {
@@ -224,6 +231,7 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 	state := a.Sessions.PopString(ctx, "state")
 	nonce := a.Sessions.PopString(ctx, "nonce")
 	verifier := a.Sessions.PopString(ctx, "verifier")
+	pairingSubject := a.Sessions.PopString(ctx, "pairing_subject")
 	started := time.Unix(a.Sessions.GetInt64(ctx, "login_time"), 0)
 	a.Sessions.Remove(ctx, "login_time")
 	if state == "" || nonce == "" || verifier == "" || time.Since(started) > 10*time.Minute ||
@@ -253,81 +261,32 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 		c.AbortWithStatus(403)
 		return
 	}
+	if pairingSubject != "" && (writer.Subject != pairingSubject || token.RefreshToken == "") {
+		c.AbortWithStatus(403)
+		return
+	}
 	if err := a.Sessions.RenewToken(ctx); err != nil {
 		c.AbortWithStatus(500)
 		return
 	}
 	a.Sessions.Put(ctx, "access", token.AccessToken)
 	a.Sessions.Put(ctx, "csrf", oauth2.GenerateVerifier())
+	if pairingSubject != "" {
+		// Download once from the verified callback; never persist the refresh token.
+		c.Header("Content-Disposition", `attachment; filename="gmwe-shortcut.json"`)
+		c.JSON(200, gin.H{"client_id": a.Config.ClientID, "resource": a.Config.Resource,
+			"token_endpoint": a.client.Endpoint.TokenURL, "refresh_token": token.RefreshToken,
+			"api_endpoint": a.Config.Origin + "/api/v1/hitokoto"})
+		return
+	}
 	c.Redirect(303, "/account")
 }
 
-func (a *OIDCAuth) startDevice(c *gin.Context) {
-	ctx := c.Request.Context()
-	if a.Sessions.GetString(ctx, "device") != "" && time.Now().Unix() < a.Sessions.GetInt64(ctx, "device_expiry") {
-		c.AbortWithStatus(409)
+func (a *OIDCAuth) startShortcut(c *gin.Context) {
+	if !a.loginLimit.Allow() {
+		c.Header("Retry-After", "10")
+		c.AbortWithStatus(429)
 		return
 	}
-	device, err := a.client.DeviceAuth(a.context(ctx), oauth2.SetAuthURLParam("resource", a.Config.Resource),
-		oauth2.SetAuthURLParam("scope", "openid offline_access "+WriteScope))
-	if err != nil {
-		c.AbortWithStatus(502)
-		return
-	}
-	u, err := url.Parse(device.VerificationURI)
-	issuer, _ := url.Parse(a.Config.Issuer)
-	if err != nil || u.Scheme != issuer.Scheme || u.Host != issuer.Host || u.User != nil || device.DeviceCode == "" || device.UserCode == "" || !device.Expiry.After(time.Now()) || device.Interval < 0 {
-		c.AbortWithStatus(502)
-		return
-	}
-	data, _ := json.Marshal(device)
-	a.Sessions.Put(ctx, "device", string(data))
-	// OAuth JSON encodes relative expiry; retain the absolute deadline separately.
-	a.Sessions.Put(ctx, "device_expiry", device.Expiry.Unix())
-	c.JSON(200, gin.H{"verification_uri": device.VerificationURI, "user_code": device.UserCode})
-}
-
-func (a *OIDCAuth) finishDevice(c *gin.Context) {
-	if !a.deviceMu.TryLock() {
-		c.AbortWithStatus(409)
-		return
-	}
-	defer a.deviceMu.Unlock()
-	ctx := c.Request.Context()
-	var device oauth2.DeviceAuthResponse
-	if json.Unmarshal([]byte(a.Sessions.GetString(ctx, "device")), &device) != nil || device.DeviceCode == "" {
-		c.AbortWithStatus(400)
-		return
-	}
-	device.Expiry = time.Unix(a.Sessions.GetInt64(ctx, "device_expiry"), 0)
-	if !time.Now().Before(device.Expiry) {
-		a.Sessions.Remove(ctx, "device")
-		a.Sessions.Remove(ctx, "device_expiry")
-		c.AbortWithStatus(410)
-		return
-	}
-	wait, cancel := context.WithTimeout(a.context(ctx), 20*time.Second)
-	defer cancel()
-	token, err := a.client.DeviceAccessToken(wait, &device, oauth2.SetAuthURLParam("resource", a.Config.Resource),
-		oauth2.SetAuthURLParam("scope", "openid offline_access "+WriteScope))
-	if errors.Is(err, context.DeadlineExceeded) && time.Now().Before(device.Expiry) {
-		c.Status(202)
-		return
-	}
-	a.Sessions.Remove(ctx, "device")
-	a.Sessions.Remove(ctx, "device_expiry")
-	if err != nil || token.RefreshToken == "" {
-		c.AbortWithStatus(401)
-		return
-	}
-	writer, err := a.VerifyAccess(ctx, token.AccessToken)
-	if err != nil || writer.Subject != c.MustGet("writer").(Writer).Subject {
-		c.AbortWithStatus(403)
-		return
-	}
-	// The refresh token is issued by Pocket-ID, not minted by GMWE. Never log this response.
-	c.Header("Content-Disposition", `attachment; filename="gmwe-shortcut.json"`)
-	c.JSON(200, gin.H{"client_id": a.Config.ClientID, "resource": a.Config.Resource,
-		"token_endpoint": a.client.Endpoint.TokenURL, "refresh_token": token.RefreshToken,
-		"api_endpoint": a.Config.Origin + "/api/v1/hitokoto"})
+	c.JSON(200, gin.H{"authorization_url": a.authorizationURL(c.Request.Context(), c.MustGet("writer").(Writer).Subject)})
 }
