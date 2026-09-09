@@ -42,9 +42,12 @@
       </form>
       <section class="account-section">
         <h2>Apple Shortcuts</h2>
-        <button class="btn btn-outline" :disabled="busy" @click="startPairing">
-          Connect Shortcut
-        </button>
+        <div class="shortcut-actions">
+          <a class="btn btn-outline" href="/downloads/GMWE-iPhone.shortcut" download="GMWE-iPhone.shortcut">Download Shortcut</a>
+          <button class="btn btn-outline" :disabled="busy" @click="startPairing">
+            Download Connection
+          </button>
+        </div>
       </section>
     </template>
   </main>
@@ -117,6 +120,8 @@ h1 { font-size: 1.5rem; font-weight: 600; }
 h2 { font-size: 1.125rem; font-weight: 600; }
 .account-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid currentColor; display: flex; flex-direction: column; gap: 0.75rem; }
 .account-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.shortcut-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.shortcut-actions > * { flex: 1 1 13rem; }
 .account-page .btn { white-space: normal; height: auto; min-height: 3rem; padding: 0.65rem 1rem; border-radius: 0.5rem; }
 .account-page textarea { width: 100%; resize: vertical; }
 </style>
