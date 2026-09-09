@@ -57,6 +57,7 @@ func main() {
 	{
 		hitokotoAPI := new(hitokoto.HitokotoAPI)
 		v1.GET("/hitokoto", login.RequireWriter(), hitokotoAPI.Get)
+		v1.GET("/hitokotos", login.RequireWriter(), hitokotoAPI.List)
 		v1.POST("/hitokoto", login.RequireWriter(), hitokotoAPI.Post)
 
 		usersAPI := new(auth.UsersAPI)

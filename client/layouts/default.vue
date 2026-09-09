@@ -1,22 +1,15 @@
 <template>
-  <div class="drawer drawer-mobile">
-    <input id="sidebar" v-model="checked" type="checkbox" class="drawer-toggle">
-    <div class="drawer-content flex flex-col">
-      <div class="h-full w-full overflow-y-scroll">
-        <AppNavbar />
-        <div class="p-4">
-          <slot />
-        </div>
-      </div>
-    </div>
-
-    <div class="drawer-side">
-      <label for="sidebar" class="drawer-overlay" />
-      <AppSidebar @change="checked = false" />
-    </div>
+  <div class="app-shell">
+    <AppNavbar />
+    <AppNavigation />
+    <main class="app-content">
+      <slot />
+    </main>
   </div>
 </template>
 
-<script lang="ts" setup>
-const checked = ref(false)
-</script>
+<style scoped>
+.app-shell { min-height: 100dvh; max-width: 68rem; margin: 0 auto; }
+.app-content { padding: 1.5rem; min-width: 0; }
+@media (max-width: 767px) { .app-content { padding: 1.25rem 1rem calc(6rem + env(safe-area-inset-bottom)); } }
+</style>

@@ -3,9 +3,11 @@ package hitokoto
 import (
 	"encoding/json"
 	"gmwe/api/auth"
+	"gmwe/api/db"
 	"io"
 	"mime"
 	"net/http"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -17,6 +19,30 @@ import (
 type HitokotoAPI struct{}
 
 var hitokotoService = new(HitokotoService)
+
+func (HitokotoAPI) List(c *gin.Context) {
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	query := strings.TrimSpace(c.Query("q"))
+	if err != nil || page < 1 || page > 100000 || !utf8.ValidString(query) || utf8.RuneCountInString(query) > 100 {
+		c.AbortWithStatus(400)
+		return
+	}
+	engine := db.DB().Engine.WithContext(c.Request.Context()).Model(&Hitokoto{})
+	if query != "" {
+		engine = engine.Where("instr(lower(content), lower(?)) > 0", query)
+	}
+	var total int64
+	if engine.Count(&total).Error != nil {
+		c.AbortWithStatus(500)
+		return
+	}
+	items := []Hitokoto{}
+	if engine.Order("id DESC").Limit(20).Offset((page-1)*20).Preload("User").Find(&items).Error != nil {
+		c.AbortWithStatus(500)
+		return
+	}
+	c.JSON(200, gin.H{"Data": items, "Total": total, "Page": page})
+}
 
 func (HitokotoAPI) Get(c *gin.Context) {
 	h, err := hitokotoService.RandomHitokoto()

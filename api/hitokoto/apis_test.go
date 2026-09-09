@@ -1,6 +1,8 @@
 package hitokoto
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
@@ -67,5 +69,40 @@ func TestWriteAuthorAndInputBoundary(t *testing.T) {
 	}
 	if len(rows) != 1 || rows[0].UserID != int(u.ID) || rows[0].Content != "Valid entry" {
 		t.Fatal("write boundary or author mapping failed")
+	}
+	for i := range 22 {
+		if err := engine.Create(&Hitokoto{Content: fmt.Sprintf("list fixture %d", i), UserID: int(u.ID)}).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	r.GET("/list", api.List)
+	for _, tc := range []struct {
+		query                string
+		status, count, total int
+	}{
+		{"", 200, 20, 23}, {"?page=2", 200, 3, 23}, {"?page=3", 200, 0, 23},
+		{"?q=VALID", 200, 1, 1}, {"?q=%25", 200, 0, 0}, {"?q=%27", 200, 0, 0},
+		{"?page=0", 400, 0, 0}, {"?page=-1", 400, 0, 0}, {"?page=abc", 400, 0, 0}, {"?q=" + strings.Repeat("a", 101), 400, 0, 0},
+	} {
+		res := httptest.NewRecorder()
+		r.ServeHTTP(res, httptest.NewRequest("GET", "/list"+tc.query, nil))
+		if res.Code != tc.status {
+			t.Fatalf("list status %d", res.Code)
+		}
+		if tc.status != 200 {
+			continue
+		}
+		var result struct {
+			Data  []Hitokoto
+			Total int
+		}
+		if json.Unmarshal(res.Body.Bytes(), &result) != nil || len(result.Data) != tc.count || result.Total != tc.total {
+			t.Fatal("list pagination or literal search failed")
+		}
+		for i, item := range result.Data {
+			if item.User.Name != "Writer" || (i > 0 && item.ID >= result.Data[i-1].ID) {
+				t.Fatal("list author/order mismatch")
+			}
+		}
 	}
 }
