@@ -23,6 +23,7 @@ type fixture struct {
 	key      *rsa.PrivateKey
 	issuer   string
 	exchange *http.HandlerFunc
+	userinfo *http.HandlerFunc
 }
 
 func newFixture(t *testing.T) fixture {
@@ -34,11 +35,12 @@ func newFixture(t *testing.T) fixture {
 	}
 	var server *httptest.Server
 	var exchange http.HandlerFunc
+	var userinfo http.HandlerFunc
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.URL.Path {
 		case "/.well-known/openid-configuration":
-			json.NewEncoder(w).Encode(map[string]any{"issuer": server.URL, "authorization_endpoint": server.URL + "/authorize", "token_endpoint": server.URL + "/token", "device_authorization_endpoint": server.URL + "/device", "jwks_uri": server.URL + "/jwks", "id_token_signing_alg_values_supported": []string{"RS256"}})
+			json.NewEncoder(w).Encode(map[string]any{"issuer": server.URL, "authorization_endpoint": server.URL + "/authorize", "token_endpoint": server.URL + "/token", "userinfo_endpoint": server.URL + "/userinfo", "device_authorization_endpoint": server.URL + "/device", "jwks_uri": server.URL + "/jwks", "id_token_signing_alg_values_supported": []string{"RS256"}})
 		case "/jwks":
 			json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: &key.PublicKey, KeyID: "test", Algorithm: "RS256", Use: "sig"}}})
 		case "/token", "/device":
@@ -46,6 +48,12 @@ func newFixture(t *testing.T) fixture {
 				http.Error(w, "not configured", 400)
 			} else {
 				exchange(w, r)
+			}
+		case "/userinfo":
+			if userinfo == nil {
+				http.Error(w, "not configured", 503)
+			} else {
+				userinfo(w, r)
 			}
 		default:
 			http.NotFound(w, r)
@@ -58,7 +66,7 @@ func newFixture(t *testing.T) fixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return fixture{a: a, key: key, issuer: server.URL, exchange: &exchange}
+	return fixture{a: a, key: key, issuer: server.URL, exchange: &exchange, userinfo: &userinfo}
 }
 
 func (f fixture) token(t *testing.T, typ string, changes map[string]any) string {

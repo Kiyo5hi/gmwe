@@ -51,8 +51,16 @@ ranges, member IDs and sort options return 400; all values are bound, not SQL te
 It provides no edit/delete operation. Composer drafts retain both content and the
 selected member; confirmed saves reset the list filters to show the new entry.
 Account displays first/last names from verified ID-token given_name/family_name
-claims, stored server-side at login. Existing sessions remain valid; use the sync
-name action to reauthenticate once for profile claims. Missing names are not guessed.
+claims. Old/missing profiles use the provider's discovered UserInfo endpoint with
+the server-held token and an exact subject check. Results stay server-side; missing
+profile grants require reauthentication, provider failures are separate from empty
+names and retry at most once per minute with a four-second timeout. There is no
+Pocket-ID admin API or cross-user profile lookup. Existing sessions remain valid;
+use the sync-name action for a missing grant. Missing names are not guessed.
+Both production proxies must forward /api/v1/users to the app's session guard;
+an unconditional legacy 401 there breaks logged-in member selection. Mobile form
+controls are at least 16px to avoid focus zoom, with bounded grid tracks and
+full-row date inputs on narrow screens; verify content-container overflow too.
 Story has its own tab; the unused Dog breeds page and upload form are removed.
 Home has no duplicate footer navigation. Mobile uses a dynamic-viewport grid with
 four bottom tabs in a bounded row and independently scrolling page content;

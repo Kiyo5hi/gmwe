@@ -75,6 +75,7 @@ type OIDCAuth struct {
 	Sessions     *scs.SessionManager
 	client       *oauth2.Config
 	idVerifier   *oidc.IDTokenVerifier
+	provider     *oidc.Provider
 	apiVerifier  *oidc.IDTokenVerifier
 	httpClient   *http.Client
 	loginLimit   *rate.Limiter
@@ -100,7 +101,7 @@ func NewOIDC(ctx context.Context, cfg OIDCConfig) (*OIDCAuth, error) {
 	sessions.ErrorFunc = func(w http.ResponseWriter, r *http.Request, err error) { http.Error(w, "Session unavailable", 503) }
 	endpoint := provider.Endpoint()
 	endpoint.AuthStyle = oauth2.AuthStyleInParams
-	return &OIDCAuth{Config: cfg, Sessions: sessions, httpClient: httpClient, loginLimit: rate.NewLimiter(rate.Every(10*time.Second), 10),
+	return &OIDCAuth{Config: cfg, Sessions: sessions, provider: provider, httpClient: httpClient, loginLimit: rate.NewLimiter(rate.Every(10*time.Second), 10),
 		client: &oauth2.Config{ClientID: cfg.ClientID, Endpoint: endpoint,
 			RedirectURL: cfg.Origin + "/api/auth/callback", Scopes: []string{oidc.ScopeOpenID, "profile", WriteScope, oidc.ScopeOfflineAccess}},
 		idVerifier:  provider.Verifier(&oidc.Config{ClientID: cfg.ClientID, SupportedSigningAlgs: []string{"RS256"}}),
@@ -214,7 +215,7 @@ func (a *OIDCAuth) Routes(r *gin.Engine) {
 	group.GET("/me", a.RequireWriter(), func(c *gin.Context) {
 		ctx := c.Request.Context()
 		c.JSON(200, gin.H{"user": c.MustGet("writer"), "csrf": a.Sessions.GetString(ctx, "csrf"),
-			"profile": gin.H{"first_name": a.Sessions.GetString(ctx, "first_name"), "last_name": a.Sessions.GetString(ctx, "last_name"), "loaded": a.Sessions.GetBool(ctx, "profile_loaded")}})
+			"profile": a.profile(ctx, c.MustGet("writer").(Writer))})
 	})
 	group.POST("/logout", a.RequireWriter(), func(c *gin.Context) {
 		if err := a.Sessions.Destroy(c.Request.Context()); err != nil {
@@ -286,16 +287,21 @@ func (a *OIDCAuth) callback(c *gin.Context) {
 		return
 	}
 	var profile struct {
-		FirstName string `json:"given_name"`
-		LastName  string `json:"family_name"`
+		FirstName *string `json:"given_name"`
+		LastName  *string `json:"family_name"`
 	}
 	if id.Claims(&profile) != nil {
 		c.AbortWithStatus(401)
 		return
 	}
-	a.Sessions.Put(ctx, "first_name", strings.TrimSpace(profile.FirstName))
-	a.Sessions.Put(ctx, "last_name", strings.TrimSpace(profile.LastName))
-	a.Sessions.Put(ctx, "profile_loaded", true)
+	a.Sessions.Remove(ctx, "first_name")
+	a.Sessions.Remove(ctx, "last_name")
+	a.Sessions.Remove(ctx, "profile_state")
+	a.Sessions.Remove(ctx, "profile_attempt")
+	a.Sessions.Put(ctx, "profile_loaded", false)
+	if profile.FirstName != nil || profile.LastName != nil {
+		a.saveProfile(ctx, profile.FirstName, profile.LastName)
+	}
 	a.Sessions.Put(ctx, "access", token.AccessToken)
 	a.Sessions.Put(ctx, "refresh", token.RefreshToken)
 	a.Sessions.Put(ctx, "subject", writer.Subject)

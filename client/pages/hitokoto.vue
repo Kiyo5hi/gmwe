@@ -36,8 +36,8 @@
           <option value="newest">最新在前</option><option value="oldest">最早在前</option>
         </select>
       </label>
-      <label>开始日期 (UTC)<input v-model="from" class="input input-bordered" type="date" :max="to || undefined" :disabled="pending"></label>
-      <label>结束日期 (UTC)<input v-model="to" class="input input-bordered" type="date" :min="from || undefined" :disabled="pending"></label>
+      <label class="date-filter">开始日期 (UTC)<input v-model="from" class="input input-bordered" type="date" :max="to || undefined" :disabled="pending"></label>
+      <label class="date-filter">结束日期 (UTC)<input v-model="to" class="input input-bordered" type="date" :min="from || undefined" :disabled="pending"></label>
       <div class="filter-actions">
         <button class="btn btn-outline" :disabled="pending" type="submit">
           <Filter :size="18" />筛选
@@ -155,6 +155,7 @@ h1 { font-size: 1.5rem; font-weight: 600; }
 .filters label { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; font-size: 0.875rem; }
 .filters input, .filters select { width: 100%; min-width: 0; max-width: 100%; border-radius: 6px; }
 .filter-actions { grid-column: 1 / -1; display: flex; gap: 0.5rem; }
+@media (max-width: 480px) { .date-filter { grid-column: 1 / -1; } }
 .entry-list { list-style: none; }
 .entry-list li { padding: 1.25rem 0; border-bottom: 1px solid #8884; }
 .entry-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.75; }

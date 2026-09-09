@@ -81,7 +81,6 @@ onMounted(async () => {
     if (!response.ok) { throw new Error('Account unavailable') }
     account.value = await response.json()
     const users = await fetch('/api/v1/users', { cache: 'no-store' })
-    if (users.status === 401) { expired.value = true; return }
     if (!users.ok) { throw new Error('Members unavailable') }
     const result = await users.json()
     if (!Array.isArray(result.Data)) { throw new TypeError('Members unavailable') }
@@ -94,7 +93,7 @@ onMounted(async () => {
         if (members.value.some(member => member.ID === draft.member)) { selectedMember.value = draft.member }
       }
     } catch { /* An unavailable or malformed draft must not block the form. */ }
-  } catch { error.value = '无法加载账户，请刷新重试。' } finally { loading.value = false }
+  } catch { error.value = account.value ? '无法加载成员，请刷新重试。' : '无法加载账户，请刷新重试。' } finally { loading.value = false }
 })
 
 async function command (path: string, body?: object) {
@@ -123,9 +122,11 @@ async function saveEntry () {
 </script>
 
 <style scoped>
-.account-page { width: 100%; margin: 1.5rem 0; padding-bottom: 1.5rem; border-bottom: 1px solid currentColor; letter-spacing: 0; }
+.account-page { width: 100%; min-width: 0; margin: 1.5rem 0; padding-bottom: 1.5rem; border-bottom: 1px solid currentColor; letter-spacing: 0; }
 .account-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
 .account-heading > div { flex: 1; min-width: 7rem; }
+.account-heading p { overflow-wrap: anywhere; }
+.entry-form select { width: 100%; min-width: 0; max-width: 100%; }
 h1 { font-size: 1.5rem; font-weight: 600; }
 h2 { font-size: 1.125rem; font-weight: 600; }
 .entry-form { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
