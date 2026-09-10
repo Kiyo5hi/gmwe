@@ -7,7 +7,7 @@
       </button>
     </header>
     <div v-show="composing" id="entry-composer">
-      <EntryComposer @saved="entrySaved" />
+      <EntryComposer v-if="composerLoaded" @saved="entrySaved" />
     </div>
     <form class="search-form" role="search" @submit.prevent="search">
       <label class="sr-only" for="entry-search">搜索 Hitokoto</label>
@@ -103,6 +103,8 @@ const pending = ref(true)
 const error = ref('')
 const expired = ref(false)
 const composing = ref(false)
+const composerLoaded = ref(false)
+watch(composing, (open) => { if (open) { composerLoaded.value = true } })
 let request = 0
 useHead({ title: 'Hitokoto | GMWE' })
 const formatDate = (value: string) => new Date(value).toLocaleDateString('zh-CN')

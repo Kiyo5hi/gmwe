@@ -1,7 +1,9 @@
 export default defineNuxtRouteMiddleware(async () => {
   if (import.meta.server) { return }
+  // Caddy has already authenticated the initial document and its assets.
+  if (useNuxtApp().isHydrating) { return }
   try {
-    const response = await fetch('/api/auth/me', { cache: 'no-store', credentials: 'same-origin' })
+    const response = await fetch('/api/auth/session', { cache: 'no-store', credentials: 'same-origin' })
     if (response.status === 401) {
       window.location.replace('/login')
       return abortNavigation()

@@ -212,6 +212,7 @@ func (a *OIDCAuth) Routes(r *gin.Engine) {
 		}
 		c.Status(204)
 	})
+	group.GET("/session", a.RequireWriter(), func(c *gin.Context) { c.Status(http.StatusNoContent) })
 	group.GET("/me", a.RequireWriter(), func(c *gin.Context) {
 		ctx := c.Request.Context()
 		c.JSON(200, gin.H{"user": c.MustGet("writer"), "csrf": a.Sessions.GetString(ctx, "csrf"),
