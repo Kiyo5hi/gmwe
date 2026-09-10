@@ -9,7 +9,7 @@
 </template>
 
 <style scoped>
-.app-shell { min-height: 100dvh; width: 100%; max-width: 68rem; margin: 0 auto; }
+.app-shell { box-sizing: border-box; min-height: 100dvh; width: 100%; max-width: 68rem; margin: 0 auto; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }
 .app-content { padding: 1.5rem; min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 767px) {
   .app-shell { height: 100dvh; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }

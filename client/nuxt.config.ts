@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'GMWE',
+      viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       meta: [
         { name: 'theme-color', content: '#166345' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
