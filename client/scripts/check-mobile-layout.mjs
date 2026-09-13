@@ -68,7 +68,8 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
       if (process.env.LAYOUT_SCREENSHOT && [390, 1440].includes(width)) {
         for (const theme of ['light', 'dark']) {
-          await page.evaluate(theme => { document.documentElement.dataset.theme = theme }, theme)
+          if (await page.locator('html').getAttribute('data-theme') !== theme) { await page.locator('.theme-button').click() }
+          assert.equal(await page.locator('html').getAttribute('data-theme'), theme)
           await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT}-${engine}-${width}-account-${theme}.png` })
           await page.getByRole('link', { name: 'Hitokoto', exact: true }).click()
           await page.locator('.entry-list li').first().waitFor()
