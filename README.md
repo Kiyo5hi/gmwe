@@ -2,15 +2,20 @@
 
 ## Responsive UI
 
-At 1024px and above, the app uses a persistent left navigation and a separately
-scrolling content area; Hitokoto filters share one four-column row. Smaller
-tablets retain top navigation, while phones retain bottom navigation with safe
-area padding. Account shows the member's name, not the identity provider brand.
+Desktop and tablet navigation share the masthead, without a persistent sidebar.
+Phones retain bottom navigation with safe-area padding. Reading widths are
+specific to each view: Hitokoto has an 800px reading column, optional expanded
+filters and member/date hierarchy; Story is a dated timeline; Account is a
+640px profile surface. Home pairs the current entry with a compact player.
+The player loads audio only on request and pauses when its view is left.
+Light/dark colors are shared across controls and pages. Account shows the
+member's name, not the identity provider brand.
 
 After generating the client, run `node scripts/check-mobile-layout.mjs` and
 `node scripts/check-startup.mjs` from `client/`. Set `PLAYWRIGHT_MODULE` when
 Playwright is installed outside this project. The layout fixture covers Chromium
-and WebKit at 320-1920px, including simulated iPhone insets and Account navigation.
+and WebKit at 320-1920px, including simulated iPhone insets, all four views,
+collapsed/expanded filters and Account navigation.
 `LAYOUT_SCREENSHOT` optionally selects an output path prefix. These are isolated
 fixtures, not evidence of an actual iPhone login.
 

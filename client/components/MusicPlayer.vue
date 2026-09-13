@@ -1,62 +1,54 @@
 <template>
-  <div class="h-full bg-green-500 shadow-lg rounded p-3 flex flex-row items-center">
-    <div class="h-full group relative flex">
-      <img class="max-h-full w-auto my-auto block rounded" :src="props.cover">
-      <div
-        class="absolute bg-black rounded bg-opacity-0 group-hover:bg-opacity-60 w-full h-full top-0 flex items-center group-hover:opacity-100 transition justify-evenly"
-      >
-        <button
-          class="hover:scale-110 text-white opacity-0 transform translate-y-3 group-hover:translate-y-0 group-hover:opacity-100 transition"
-          @click="play"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="40"
-            height="40"
-            fill="currentColor"
-            class="bi bi-play-circle-fill"
-            viewBox="0 0 16 16"
-          >
-            <path
-              :class="{ hidden: isPlaying }"
-              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814l-3.5-2.5z"
-            />
-            <path
-              :class="{ hidden: !isPlaying }"
-              d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.25 5C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5zm3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5z"
-            />
-          </svg>
-        </button>
+  <section class="music-player" aria-label="音乐播放器">
+    <img class="cover" :src="cover" :alt="name + ' 专辑封面'" width="256" height="256">
+    <div class="music-controls">
+      <div class="track">
+        <h2>{{ name }}</h2><p>{{ artist }}</p>
       </div>
+      <button type="button" :aria-label="isPlaying ? '暂停' : '播放'" :title="isPlaying ? '暂停' : '播放'" @click="toggle">
+        <Pause v-if="isPlaying" :size="20" /><Play v-else :size="20" />
+      </button>
     </div>
-    <div class="p-5 m-auto">
-      <h3 class="text-white text-lg">
-        {{ props.name }}
-      </h3>
-      <p class="text-gray-800">
-        {{ props.artist }}
-      </p>
-    </div>
-  </div>
+    <p v-if="failed" class="play-error" role="alert">
+      无法播放，请重试。
+    </p>
+    <audio
+      ref="audio"
+      :src="url"
+      preload="none"
+      @play="isPlaying = true"
+      @pause="isPlaying = false"
+      @ended="isPlaying = false"
+    />
+  </section>
 </template>
-
-<script lang="ts" setup>
-const props = defineProps<{
-  name: string,
-  artist: string,
-  url: string,
-  cover: string,
-}>()
-
-const music = new Audio(props.url)
+<script setup lang="ts">
+import { Pause, Play } from '@lucide/vue'
+defineProps<{ name: string, artist: string, url: string, cover: string }>()
+const audio = ref<HTMLAudioElement | null>(null)
 const isPlaying = ref(false)
-
-function play () {
-  if (!isPlaying.value) {
-    music.play()
-  } else {
-    music.pause()
-  }
-  isPlaying.value = !isPlaying.value
+const failed = ref(false)
+async function toggle () {
+  failed.value = false
+  if (!audio.value) { return }
+  if (!audio.value.paused) { audio.value.pause(); return }
+  try { await audio.value.play() } catch { failed.value = true }
 }
+onBeforeUnmount(() => audio.value?.pause())
 </script>
+<style scoped>
+.music-player { min-width: 0; }
+.cover { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+.music-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 18px; }
+.track { min-width: 0; }
+.track h2 { font-size: 17px; font-weight: 600; }
+.track p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; color: var(--surface); background: var(--accent); }
+.play-error { color: #bf5266; font-size: 12px; margin-top: 10px; }
+@media (max-width: 767px) {
+  .music-player { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 18px; align-items: center; border-top: 1px solid var(--line); padding-top: 24px; }
+  .cover { width: 80px; height: 80px; }
+  .music-controls { padding: 0; }
+  .play-error { grid-column: 1 / -1; }
+}
+</style>

@@ -8,7 +8,7 @@
       {{ error }}
     </p>
     <div v-if="account" class="identity">
-      <UserRound :size="40" aria-hidden="true" />
+      <span class="profile-avatar"><UserRound :size="30" aria-hidden="true" /></span>
       <div><h2>{{ fullName }}</h2></div>
     </div>
     <dl v-if="account" class="profile-fields">
@@ -58,15 +58,15 @@ async function logout () {
 }
 </script>
 <style scoped>
-.account-page { max-width: 42rem; margin: 0 auto; }
-h1 { font-size: 1.5rem; font-weight: 600; }
+.account-page { max-width: 640px; margin: 0 auto; }
 h2 { font-size: 1.25rem; overflow-wrap: anywhere; }
-.identity { display: flex; align-items: center; gap: 1rem; margin: 2rem 0; }
+.identity { display: flex; align-items: center; gap: 20px; margin: 36px 0; }
+.profile-avatar { display: grid; place-items: center; width: 64px; height: 64px; flex-shrink: 0; border-radius: 50%; background: var(--tint); color: var(--accent); }
 .identity > div { min-width: 0; }
 .identity > svg { flex-shrink: 0; }
 .profile-fields > div { min-width: 0; }
 .identity p { opacity: 0.65; margin-top: 0.25rem; }
-.profile-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.profile-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 24px 0 32px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 32px; }
 dt { font-size: 0.875rem; opacity: 0.65; }
 dd { margin-top: 0.25rem; overflow-wrap: anywhere; }
 .btn { border-radius: 6px; gap: 0.5rem; }

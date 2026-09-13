@@ -1,17 +1,13 @@
 <template>
-  <div class="flex flex-col items-center">
-    <h1 class="text-2xl font-semibold mb-6">
-      Our story
-    </h1>
-    <ul class="steps steps-vertical">
-      <li v-for="event in events" :key="event.event" data-content="●" class="step step-primary">
-        <div class="flex flex-row items-center text-left">
-          <span class="flex-none my-auto">{{ event.date }}:&nbsp;</span>
-          <span class="flex-1">{{ event.event }}</span>
-        </div>
+  <section class="story-page">
+    <header><h1>Story</h1><p>Acey &amp; Kiyoshi · {{ events.length }} 个瞬间</p></header>
+    <ol class="story-timeline">
+      <li v-for="event in events" :key="event.date + event.event">
+        <time :datetime="event.date">{{ event.date.replaceAll('-', '.') }}</time>
+        <p>{{ event.event }}</p>
       </li>
-    </ul>
-  </div>
+    </ol>
+  </section>
 </template>
 
 <script lang="ts" setup>
@@ -138,3 +134,13 @@ const events = [{
   event: '🐱 Aron 6.8'
 }].sort((a, b) => a.date.localeCompare(b.date))
 </script>
+<style scoped>
+.story-page { max-width: 720px; margin: 0 auto; }
+header > p { margin-top: 10px; color: var(--muted); font-size: 13px; }
+.story-timeline { list-style: none; margin: 40px 0 0; padding: 0; }
+li { display: grid; grid-template-columns: 108px minmax(0, 1fr); gap: 32px; position: relative; padding-bottom: 30px; }
+time { color: var(--muted); font-size: 12px; padding-top: 4px; font-variant-numeric: tabular-nums; }
+li p { font-size: 16px; line-height: 1.7; padding-left: 22px; border-left: 1px solid var(--line); position: relative; }
+li p::before { content: ''; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; position: absolute; left: -4px; top: 9px; }
+@media (max-width: 480px) { li { grid-template-columns: 86px minmax(0, 1fr); gap: 10px; padding-bottom: 24px; } li p { font-size: 15px; padding-left: 16px; } }
+</style>

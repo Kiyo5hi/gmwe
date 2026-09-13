@@ -12,17 +12,17 @@ const items = [{ path: '/', label: 'Home', icon: House }, { path: '/hitokoto', l
 const active = (path: string) => route.path.replace(/\/$/, '') === path.replace(/\/$/, '')
 </script>
 <style scoped>
-.app-navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #8884; }
-a { display: flex; align-items: center; justify-content: center; gap: 0.6rem; min-height: 3.5rem; border-bottom: 3px solid transparent; }
-a.selected { color: #21825c; border-color: currentColor; font-weight: 600; }
+.app-navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: transparent; }
+a { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; color: var(--muted); font-size: 14px; border-bottom: 2px solid transparent; }
+a.selected { color: var(--accent); border-color: currentColor; font-weight: 650; }
 a:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
-@media (min-width: 1024px) {
-  .app-navigation { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 1.5rem 0.75rem; gap: 0.5rem; border-bottom: 0; border-right: 1px solid #8884; }
-  a { justify-content: flex-start; padding: 0 1rem; border-bottom: 0; border-left: 3px solid transparent; border-radius: 6px; }
-  a.selected { background: #21825c12; }
+@media (min-width: 768px) {
+  .app-navigation { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 408px; height: 80px; }
+  a :deep(svg) { display: none; }
 }
+@media (min-width: 768px) and (max-width: 899px) { .app-navigation { width: 360px; } }
 @media (max-width: 767px) {
-  .app-navigation { grid-row: 3; grid-template-rows: 4rem; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid #8884; border-bottom: 0; }
+  .app-navigation { grid-row: 3; grid-template-rows: 4rem; background: var(--surface); padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--line); border-bottom: 0; }
   a { flex-direction: column; gap: 0.2rem; height: 4rem; font-size: 0.75rem; border-bottom: 0; border-top: 3px solid transparent; }
 }
 </style>

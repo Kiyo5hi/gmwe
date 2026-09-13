@@ -1,7 +1,11 @@
 <template>
-  <NuxtLink :to="'/'">
-    <div class="capitalize flex-0 btn btn-ghost px-2 font-title text-primary inline-flex text-lg md:text-3xl">
-      GummyWe
-    </div>
+  <NuxtLink to="/" class="wordmark">
+    Gummy<span>We</span><span class="mark" aria-hidden="true">.</span>
   </NuxtLink>
 </template>
+<style scoped>
+.wordmark { font-size: 24px; font-weight: 750; text-decoration: none; color: var(--ink); }
+.wordmark > span { color: var(--accent); }
+.mark { margin-left: 2px; }
+@media (max-width: 767px) { .wordmark { font-size: 21px; } }
+</style>
