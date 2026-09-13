@@ -9,7 +9,7 @@
     </p>
     <div v-if="account" class="identity">
       <UserRound :size="40" aria-hidden="true" />
-      <div><h2>{{ fullName }}</h2><p>Pocket-ID</p></div>
+      <div><h2>{{ fullName }}</h2></div>
     </div>
     <dl v-if="account" class="profile-fields">
       <div><dt>First name</dt><dd>{{ account.profile?.first_name || (account.profile?.loaded ? '未填写' : '待同步') }}</dd></div>
@@ -19,7 +19,7 @@
       当前登录尚未授权姓名资料。
     </p>
     <p v-if="account?.profile?.state === 'unavailable'" role="status">
-      Pocket-ID 资料暂时无法读取。
+      账户资料暂时无法读取。
     </p>
     <a v-if="account && !account.profile?.loaded" href="/api/auth/login" class="btn btn-ghost">同步姓名</a>
     <button v-if="account" class="btn btn-outline" :disabled="busy" @click="logout">

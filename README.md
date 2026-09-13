@@ -1,5 +1,21 @@
 # GMWE
 
+## Responsive UI
+
+At 1024px and above, the app uses a persistent left navigation and a separately
+scrolling content area; Hitokoto filters share one four-column row. Smaller
+tablets retain top navigation, while phones retain bottom navigation with safe
+area padding. Account shows the member's name, not the identity provider brand.
+
+After generating the client, run `node scripts/check-mobile-layout.mjs` and
+`node scripts/check-startup.mjs` from `client/`. Set `PLAYWRIGHT_MODULE` when
+Playwright is installed outside this project. The layout fixture covers Chromium
+and WebKit at 320-1920px, including simulated iPhone insets and Account navigation.
+`LAYOUT_SCREENSHOT` optionally selects an output path prefix. These are isolated
+fixtures, not evidence of an actual iPhone login.
+
+## Storage
+
 The API uses SQLite through GORM. Set `DB_URI=file:/app/data/gmwe.db?mode=rw`
 in production: a missing database fails startup rather than creating an empty
 replacement. Mount the entire database directory on local persistent storage,

@@ -16,6 +16,11 @@ const active = (path: string) => route.path.replace(/\/$/, '') === path.replace(
 a { display: flex; align-items: center; justify-content: center; gap: 0.6rem; min-height: 3.5rem; border-bottom: 3px solid transparent; }
 a.selected { color: #21825c; border-color: currentColor; font-weight: 600; }
 a:focus-visible { outline: 2px solid currentColor; outline-offset: -4px; }
+@media (min-width: 1024px) {
+  .app-navigation { grid-template-columns: minmax(0, 1fr); align-content: start; padding: 1.5rem 0.75rem; gap: 0.5rem; border-bottom: 0; border-right: 1px solid #8884; }
+  a { justify-content: flex-start; padding: 0 1rem; border-bottom: 0; border-left: 3px solid transparent; border-radius: 6px; }
+  a.selected { background: #21825c12; }
+}
 @media (max-width: 767px) {
   .app-navigation { grid-row: 3; grid-template-rows: 4rem; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid #8884; border-bottom: 0; }
   a { flex-direction: column; gap: 0.2rem; height: 4rem; font-size: 0.75rem; border-bottom: 0; border-top: 3px solid transparent; }

@@ -11,12 +11,13 @@ const entries = Array.from({ length: 20 }, (_, i) => ({ ID: i + 1, Content: 'Mob
 for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
   const browser = await launcher.launch(engine === 'chromium' ? { channel: 'chrome' } : {})
   try {
-    for (const [width, height, top, bottom, side] of [[320, 700, 0, 0, 0], [390, 844, 47, 34, 0], [430, 932, 59, 34, 0], [740, 390, 0, 21, 44]]) {
-      const page = await browser.newPage({ viewport: { width, height }, isMobile: true, hasTouch: true })
+    for (const [width, height, top, bottom, side] of [[320, 700, 0, 0, 0], [390, 844, 47, 34, 0], [430, 932, 59, 34, 0], [740, 390, 0, 21, 44], [1024, 768, 0, 0, 0], [1440, 900, 0, 0, 0], [1920, 1080, 0, 0, 0]]) {
+      const desktop = width >= 1024
+      const page = await browser.newPage({ viewport: { width, height }, isMobile: !desktop, hasTouch: !desktop })
       await page.route('http://gmwe.test/**', async route => {
         const pathname = new URL(route.request().url()).pathname
         if (pathname.startsWith('/api/')) {
-          const body = pathname.endsWith('/me') ? { authenticated: true, name: 'Member', csrf: 'fixture' } : { Data: pathname.endsWith('/users') ? [{ ID: 1, Name: 'Member' }] : entries, Total: entries.length }
+          const body = pathname.endsWith('/me') ? { user: { name: 'Member', subject: 'fixture' }, profile: { first_name: 'Test', last_name: 'Member', loaded: true }, csrf: 'fixture' } : { Data: pathname.endsWith('/users') ? [{ ID: 1, Name: 'Member' }] : entries, Total: entries.length }
           return route.fulfill({ json: body })
         }
         const asset = pathname.includes('.') ? pathname.slice(1) : 'index.html'
@@ -41,15 +42,23 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
       assert.equal(result.topPadding, top)
       assert.ok(result.nav.bottom <= height + 1)
       assert.ok(Math.abs(result.nav.bottom - height) <= 1)
-      assert.ok(result.main.bottom <= result.nav.top + 1)
+      if (desktop) {
+        assert.ok(result.main.left >= result.nav.right - 1)
+        assert.ok(result.main.right - result.main.left >= 800)
+        assert.equal(await page.locator('.filters').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), 4)
+      } else { assert.ok(result.main.bottom <= result.nav.top + 1) }
       assert.ok(result.scrollWidth <= result.clientWidth)
       for (const link of result.links) {
         assert.ok(link.bottom <= height - bottom + 1)
         assert.ok(link.left >= side && link.right <= width - side)
-        assert.ok(link.bottom - link.top >= 64)
+        assert.ok(link.bottom - link.top >= (desktop ? 56 : 64))
       }
       console.log('PASS', engine, { width, height, top, bottom, side })
-      if (process.env.LAYOUT_SCREENSHOT && width === 390) await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT}-${engine}.png` })
+      if (process.env.LAYOUT_SCREENSHOT && [390, 1440].includes(width)) await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT}-${engine}-${width}.png` })
+      await page.getByRole('link', { name: 'Account', exact: true }).click()
+      await page.getByRole('heading', { name: 'Test Member', exact: true }).waitFor()
+      assert.equal(await page.locator('.account-page').getByText('Pocket-ID', { exact: true }).count(), 0)
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
       await page.close()
     }
   } finally { await browser.close() }

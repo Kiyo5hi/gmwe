@@ -159,6 +159,10 @@ h1 { font-size: 1.5rem; font-weight: 600; }
 .date-filter input { display: block; appearance: none; -webkit-appearance: none; box-sizing: border-box; min-inline-size: 0; inline-size: 100%; max-inline-size: 100%; }
 .date-filter input::-webkit-date-and-time-value { min-width: 0; text-align: left; }
 .filter-actions { grid-column: 1 / -1; display: flex; gap: 0.5rem; }
+@media (min-width: 1024px) {
+  .hitokoto-page { max-width: none; }
+  .filters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 @media (max-width: 480px) { .date-filter { grid-column: 1 / -1; } }
 .entry-list { list-style: none; }
 .entry-list li { padding: 1.25rem 0; border-bottom: 1px solid #8884; }
