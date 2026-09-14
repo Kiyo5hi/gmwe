@@ -2,11 +2,15 @@
   <div class="app-shell">
     <AppNavbar />
     <AppNavigation />
-    <main class="app-content">
+    <main :key="route.path" class="app-content">
       <slot />
     </main>
   </div>
 </template>
+
+<script setup lang="ts">
+const route = useRoute()
+</script>
 
 <style scoped>
 .app-shell { box-sizing: border-box; min-height: 100dvh; width: 100%; max-width: 1120px; margin: 0 auto; position: relative; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }

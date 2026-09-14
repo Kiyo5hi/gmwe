@@ -81,6 +81,28 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
       await page.getByRole('link', { name: 'Story', exact: true }).click()
       await page.locator('.story-timeline li').first().waitFor()
       assert.equal(await page.locator('.app-content').evaluate(el => el.scrollWidth <= el.clientWidth), true)
+      // Each destination must discard Story's long scroll range and offset.
+      for (const [label, selector] of [['Home', '.home-page'], ['Account', '.account-page'], ['Hitokoto', '.hitokoto-page']]) {
+        await page.getByRole('link', { name: 'Story', exact: true }).click()
+        await page.locator('.story-timeline li').first().waitFor()
+        await page.evaluate(() => {
+          const main = document.querySelector('.app-content')
+          main.scrollTop = main.scrollHeight
+          window.scrollTo(0, document.documentElement.scrollHeight)
+        })
+        await page.getByRole('link', { name: label, exact: true }).click()
+        await page.locator(selector).waitFor()
+        if (label === 'Home') await page.locator('blockquote').waitFor()
+        if (label === 'Hitokoto') await page.locator('.entry-list li').first().waitFor()
+        await page.waitForFunction(() => document.querySelector('.app-content').scrollTop === 0)
+        const geometry = await page.locator('.app-content').evaluate(main => {
+          const child = main.firstElementChild
+          const css = getComputedStyle(main)
+          return { actual: main.scrollHeight, expected: Math.max(main.clientHeight, child.getBoundingClientRect().height + parseFloat(css.paddingTop) + parseFloat(css.paddingBottom)), children: main.children.length }
+        })
+        assert.equal(geometry.children, 1)
+        assert.ok(Math.abs(geometry.actual - geometry.expected) <= 2, `${engine} ${width} ${label}: stale scroll height ${JSON.stringify(geometry)}`)
+      }
       await page.getByRole('link', { name: 'Home', exact: true }).click()
       await page.locator('blockquote').waitFor()
       assert.equal(await page.locator('.app-content').evaluate(el => el.scrollWidth <= el.clientWidth), true)
