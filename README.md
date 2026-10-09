@@ -63,3 +63,14 @@ lockfile: production and local builds use the same npm lock.
 Authentication is separate from this storage change. The API must not be exposed
 for anonymous writes. The managed homelab deployment keeps its public/private
 Caddy write guards until Pocket-ID integration has been verified end to end.
+
+## Pocket ID avatars
+
+Account and Hitokoto author avatars use the existing server-side writer mapping.
+An authenticated `/api/auth/avatar/:userID` route resolves only configured members
+to Pocket ID's public profile-picture endpoint on the configured issuer. No
+administrator API key or new database is needed. Unknown members return 404,
+anonymous callers 401. The browser sends no referrer and falls back to initials
+if the image fails. A five-minute URL bucket bounds stale CDN images on subsequent
+page loads; an already open page does not receive pushed updates. This adapter
+uses Pocket ID's avatar API, not a provider-independent OIDC picture claim.

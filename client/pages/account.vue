@@ -8,7 +8,7 @@
       {{ error }}
     </p>
     <div v-if="account" class="identity">
-      <span class="profile-avatar"><UserRound :size="30" aria-hidden="true" /></span>
+      <MemberAvatar class="profile-avatar" :user-id="account.user.user_id" :name="fullName" />
       <div><h2>{{ fullName }}</h2></div>
     </div>
     <dl v-if="account" class="profile-fields">
@@ -29,8 +29,8 @@
   </section>
 </template>
 <script setup lang="ts">
-import { LogOut, UserRound } from '@lucide/vue'
-type Account = { user: { name: string, subject: string }, profile?: { first_name: string, last_name: string, loaded: boolean, state?: string }, csrf: string }
+import { LogOut } from '@lucide/vue'
+type Account = { user: { name: string, subject: string, user_id: number }, profile?: { first_name: string, last_name: string, loaded: boolean, state?: string }, csrf: string }
 const account = ref<Account | null>(null)
 const fullName = computed(() => [account.value?.profile?.first_name, account.value?.profile?.last_name].filter(Boolean).join(' ') || account.value?.user.name)
 const loading = ref(true)

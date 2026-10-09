@@ -79,7 +79,7 @@
     </p>
     <ol v-else class="entry-list" :aria-busy="pending">
       <li v-for="entry in entries" :key="entry.ID">
-        <span class="entry-avatar" :class="{ rose: entry.User.Name.startsWith('Acey') }" aria-hidden="true">{{ entry.User.Name.charAt(0).toUpperCase() }}</span>
+        <MemberAvatar :user-id="entry.User.ID" :name="entry.User.Name" />
         <div class="entry-body">
           <p class="entry-content">
             {{ entry.Content }}

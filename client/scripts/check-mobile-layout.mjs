@@ -6,7 +6,7 @@ const require = createRequire(import.meta.url)
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright')
 const root = new URL('../.output/public/', import.meta.url)
 const examples = ['今天也想和你一起吃晚饭。', '把平凡的小事记下来，回头看的时候，原来已经一起走了这么远。', '周末的计划：睡个懒觉，再慢慢出门。', '下次还要一起去海边。']
-const entries = Array.from({ length: 20 }, (_, i) => ({ ID: i + 1, Content: examples[i % examples.length], CreatedAt: '2026-09-09T00:00:00Z', User: { Name: i % 2 ? 'Kiyoshi Guo' : 'Acey Tong' } }))
+const entries = Array.from({ length: 20 }, (_, i) => ({ ID: i + 1, Content: examples[i % examples.length], CreatedAt: '2026-09-09T00:00:00Z', User: { ID: i % 2 ? 1 : 2, Name: i % 2 ? 'Kiyoshi Guo' : 'Acey Tong' } }))
 
 // Substitute known insets only in fixture CSS: desktop engines have no iPhone Home indicator.
 for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
@@ -17,8 +17,12 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
       const page = await browser.newPage({ viewport: { width, height }, isMobile: !desktop, hasTouch: !desktop })
       await page.route('http://gmwe.test/**', async route => {
         const pathname = new URL(route.request().url()).pathname
+        if (pathname.startsWith('/api/auth/avatar/')) {
+          if (pathname.endsWith('/2')) { return route.fulfill({ status: 404 }) }
+          return route.fulfill({ body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64'), contentType: 'image/png' })
+        }
         if (pathname.startsWith('/api/')) {
-          const body = pathname.endsWith('/me') ? { user: { name: 'Member', subject: 'fixture' }, profile: { first_name: 'Test', last_name: 'Member', loaded: true }, csrf: 'fixture' } : { Data: pathname.endsWith('/users') ? [{ ID: 1, Name: 'Member' }] : entries, Total: entries.length }
+          const body = pathname.endsWith('/me') ? { user: { name: 'Member', subject: 'fixture', user_id: 1 }, profile: { first_name: 'Test', last_name: 'Member', loaded: true }, csrf: 'fixture' } : { Data: pathname.endsWith('/users') ? [{ ID: 1, Name: 'Member' }] : entries, Total: entries.length }
           return route.fulfill({ json: pathname === '/api/v1/hitokoto' ? { Data: entries[1] } : body })
         }
         const asset = pathname.includes('.') ? pathname.slice(1) : 'index.html'
@@ -63,6 +67,9 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
       console.log('PASS', engine, { width, height, top, bottom, side })
       if (process.env.LAYOUT_SCREENSHOT && [390, 1440].includes(width)) await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT}-${engine}-${width}.png` })
       await page.getByRole('link', { name: 'Account', exact: true }).click()
+      await page.locator('.profile-avatar img').waitFor()
+      await page.waitForFunction(() => document.querySelector('.profile-avatar img')?.naturalWidth > 0)
+      assert.equal(await page.locator('.profile-avatar img').getAttribute('src'), '/api/auth/avatar/1')
       await page.getByRole('heading', { name: 'Test Member', exact: true }).waitFor()
       assert.equal(await page.locator('.account-page').getByText('Pocket-ID', { exact: true }).count(), 0)
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true)
@@ -75,6 +82,9 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
           await page.locator('.entry-list li').first().waitFor()
           await page.screenshot({ path: `${process.env.LAYOUT_SCREENSHOT}-${engine}-${width}-hitokoto-${theme}.png` })
           await page.getByRole('link', { name: 'Account', exact: true }).click()
+      await page.locator('.profile-avatar img').waitFor()
+      await page.waitForFunction(() => document.querySelector('.profile-avatar img')?.naturalWidth > 0)
+      assert.equal(await page.locator('.profile-avatar img').getAttribute('src'), '/api/auth/avatar/1')
           await page.getByRole('heading', { name: 'Test Member', exact: true }).waitFor()
         }
       }
