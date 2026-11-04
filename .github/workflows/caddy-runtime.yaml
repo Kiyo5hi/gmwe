@@ -1,0 +1,39 @@
+name: Build verified Caddy runtimes
+on:
+  push:
+    branches: [main]
+    paths: [deploy/caddy-runtime.Dockerfile, .github/workflows/caddy-runtime.yaml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        include:
+          - target: standard
+            tag: caddy-2.11.8
+          - target: cloudflare
+            tag: caddy-2.11.8-cloudflare
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/caddy-runtime.Dockerfile
+          target: ${{ matrix.target }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/kiyo5hi/gmwe:${{ matrix.tag }}
+          cache-from: type=gha,scope=caddy-${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=caddy-${{ matrix.target }}
