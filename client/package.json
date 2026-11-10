@@ -16,13 +16,24 @@
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
     "@nuxtjs/tailwindcss": "^6.2.0",
     "eslint": "^8.31.0",
-    "nuxt": "3.21.11",
-    "sharp": "0.35.4",
+    "nuxt": "4.6.4",
+    "sharp": "0.35.5",
     "typescript": "^4.9.4"
   },
   "dependencies": {
     "@lucide/vue": "1.43.0",
     "daisyui": "^2.46.0",
     "theme-change": "^2.2.0"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.5"
+    },
+    "@vercel/nft": {
+      "glob": "^14.0.4"
+    },
+    "archiver": {
+      "readdir-glob": "^4.0.0"
+    }
   }
 }
