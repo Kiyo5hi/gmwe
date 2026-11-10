@@ -1,7 +1,10 @@
 <template>
   <AppLayout>
     <p v-if="navigationError" class="text-error navigation-error" role="alert">{{ navigationError }}</p>
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <component :is="Component" v-if="Component" />
+      <p v-else-if="!navigationError" role="status">加载中…</p>
+    </RouterView>
   </AppLayout>
 </template>
 <script setup lang="ts">
