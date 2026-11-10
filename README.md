@@ -59,6 +59,14 @@ run `npm ci`, `npm run check` and `npm run build` in `client/`. Commit
 `package-lock.json` with dependency changes. Do not regenerate a separate pnpm
 lockfile: production and local builds use the same npm lock.
 
+The Docker API stage copies only `go.mod`, `go.sum` and `api/`; frontend edits
+therefore reuse its compiled binaries. Each dependency-install layer precedes
+its component sources, so source edits also reuse downloaded dependencies.
+CI validates pull requests without publishing images. Main publishes amd64/arm64
+images and exports the intermediate BuildKit layers to the dedicated `gmwe-image`
+GitHub Actions cache; the first build or an evicted cache still needs a cold build.
+The live service remains pinned to its reviewed digest until a separate deployment.
+
 Authentication is separate from this storage change. The API must not be exposed
 for anonymous writes. The managed homelab deployment keeps its public/private
 Caddy write guards until Pocket-ID integration has been verified end to end.

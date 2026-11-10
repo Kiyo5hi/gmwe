@@ -2,8 +2,10 @@ FROM docker.io/library/golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325a
 
 RUN apk add --no-cache build-base
 
-COPY . /src
 WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY api/ ./api/
 RUN go test ./api/... && mkdir -p /dist && \
     CGO_ENABLED=1 go build -o /dist/api ./api && \
     CGO_ENABLED=1 go build -o /dist/storage ./api/cmd/storage
@@ -12,9 +14,11 @@ FROM --platform=$BUILDPLATFORM docker.io/library/node:24.22.2@sha256:e7add2a490b
 
 RUN npm install --global npm@11.19.1
 
-COPY . /src
 WORKDIR /src/client
-RUN npm ci && npm run check && npm run build && \
+COPY client/package.json client/package-lock.json ./
+RUN npm ci
+COPY client/ ./
+RUN npm run check && npm run build && \
     cp -r dist /dist
 
 FROM docker.io/library/caddy:2.11.8@sha256:4fcafa98afd1c2e642e353e3c5cf9ddbe892fcee14bc990e7ba2c5b78e51f9cf
