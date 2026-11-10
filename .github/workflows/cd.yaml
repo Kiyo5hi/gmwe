@@ -100,6 +100,10 @@ jobs:
       - name: Verify frontend edits reuse the Go build
         if: github.event_name == 'pull_request'
         run: |
+          # Imported remote cache records are scoped to the preceding solve.
+          # Establish a local API baseline before testing a frontend-only edit.
+          docker buildx build --platform linux/amd64 --target api_build \
+            --output type=cacheonly --progress=plain -f deploy/Dockerfile .
           trap 'git restore client/styles.css' EXIT
           printf '\n/* build cache probe */\n' >> client/styles.css
           docker buildx build --platform linux/amd64 --target api_build \

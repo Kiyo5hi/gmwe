@@ -9,6 +9,27 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit }).filter(([e
   const browser = await launcher.launch(engine === 'chromium' && process.env.CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.CHROMIUM_EXECUTABLE_PATH } : {})
   let release
   try {
+    const pendingPage = await browser.newPage({ viewport: { width: 390, height: 844 } })
+    let releaseChunk
+    let sawChunk
+    const chunkRequested = new Promise(resolve => { sawChunk = resolve })
+    const chunkGate = new Promise(resolve => { releaseChunk = resolve })
+    await pendingPage.route('http://gmwe.test/**', async route => {
+      const path = new URL(route.request().url()).pathname
+      if (/\/hitokoto-[^/]+\.js$/.test(path)) { sawChunk(); await chunkGate }
+      if (path.startsWith('/api/')) return route.fulfill({ json: { Data: [{ ID: 1, Content: 'Fixture entry', CreatedAt: '2026-09-09', User: { Name: 'Member' } }], Total: 1 } })
+      const asset = path.includes('.') ? path.slice(1) : 'index.html'
+      return route.fulfill({ body: await readFile(new URL(asset, root)), contentType: ({ js: 'text/javascript', css: 'text/css', html: 'text/html' })[asset.split('.').pop()] || 'application/octet-stream' })
+    })
+    try {
+      await pendingPage.goto('http://gmwe.test/hitokoto', { waitUntil: 'commit' })
+      await Promise.race([chunkRequested, new Promise((_, reject) => setTimeout(() => reject(new Error('Route chunk was not requested')), 5000))])
+      await pendingPage.locator('.app-shell').waitFor({ state: 'visible', timeout: 2000 })
+      assert.equal(await pendingPage.getByRole('status').innerText(), '加载中…')
+      releaseChunk()
+      await pendingPage.locator('.entry-list li').waitFor()
+      console.log('PASS', engine, 'visible shell while the initial route download is stalled')
+    } finally { releaseChunk(); await pendingPage.close() }
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true })
     let accountCalls = 0
     let sessionCalls = 0

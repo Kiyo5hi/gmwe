@@ -5,5 +5,5 @@ import './styles.css'
 
 const app = createApp(App)
 app.use(router)
-await router.isReady()
+// Render the shared shell immediately; RouterView loads the first page separately.
 app.mount('#app')
