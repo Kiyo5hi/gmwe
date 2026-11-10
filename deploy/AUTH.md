@@ -85,7 +85,7 @@ remain separate acceptance steps. Never generate admin sessions to bypass them.
 ## Home Screen App
 
 The manifest uses standalone mode and a root start URL. Icons are reproducibly
-generated from the existing logo by sharp during generate/build/dev. Login also
+generated from the existing logo by sharp during build/dev. Login also
 includes the manifest and Apple touch icon, so installation needs no bypass.
 The service worker is network-only, with a generic offline navigation response.
 It never caches content, auth replies or writes, and has no background sync.

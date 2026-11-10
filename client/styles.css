@@ -1,0 +1,33 @@
+/* Native base styles and the small set of controls used by these four views. */
+*, ::before, ::after { box-sizing: border-box; border: 0 solid #e5e7eb; }
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; tab-size: 4; font-feature-settings: normal; font-variation-settings: normal; color-scheme: light; }
+html[data-theme=dark] { color-scheme: dark; }
+body { margin: 0; line-height: inherit; }
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+h1, h2, h3, h4, h5, h6, p, blockquote, dl, dd { margin: 0; }
+ol, ul, menu { list-style: none; margin: 0; padding: 0; }
+a { color: inherit; text-decoration: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; margin: 0; padding: 0; }
+button, select { text-transform: none; }
+button { appearance: button; background: transparent; background-image: none; cursor: pointer; }
+button:disabled { cursor: default; }
+img, svg, video, audio, canvas { display: block; vertical-align: middle; }
+img, video { max-width: 100%; height: auto; }
+textarea { resize: vertical; }
+input::placeholder, textarea::placeholder { opacity: 1; color: #9ca3af; }
+[hidden] { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+.text-error { color: #f87272; }
+.link { cursor: pointer; text-decoration: underline; }
+.btn { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; flex-shrink: 0; gap: .5rem; padding: 0 1rem; border: 1px solid transparent; line-height: 1; user-select: none; text-align: center; text-decoration: none; background: var(--wash); color: var(--ink); }
+.btn-square { width: 3rem; padding: 0; }
+.btn-ghost, .btn-outline { background: transparent; }
+.btn:hover { filter: brightness(.95); }
+.btn:disabled { opacity: .4; pointer-events: none; }
+.input, .select, .textarea { appearance: none; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); color: var(--ink); }
+.input { height: 3rem; padding: 0 1rem; font-size: 1rem; line-height: 1.5rem; }
+.select { cursor: pointer; display: inline-flex; flex-shrink: 0; height: 3rem; min-height: 3rem; padding: 0 2.5rem 0 1rem; font-size: .875rem; line-height: 2; background-image: linear-gradient(45deg, transparent 50%, currentColor 0), linear-gradient(135deg, currentColor 50%, transparent 0); background-position: calc(100% - 20px) calc(1px + 50%), calc(100% - 16px) calc(1px + 50%); background-repeat: no-repeat; background-size: 4px 4px; }
+.textarea { min-height: 3rem; padding: .5rem 1rem; font-size: .875rem; line-height: 2; }
+.input:focus, .select:focus, .textarea:focus { outline: 2px solid var(--line); outline-offset: 2px; }
+.input:disabled, .select:disabled, .textarea:disabled { cursor: not-allowed; opacity: .6; }
+.navigation-error { margin-bottom: 1rem; }

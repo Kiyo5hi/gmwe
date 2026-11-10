@@ -6,9 +6,9 @@
     <div class="home-grid">
       <section class="daily-note">
         <div class="section-label">
-          <Quote :size="17" /><NuxtLink to="/hitokoto">
+          <Quote :size="17" /><RouterLink to="/hitokoto">
             Hitokoto<ArrowUpRight :size="15" />
-          </NuxtLink>
+          </RouterLink>
         </div>
         <p v-if="hitokotoPending" class="note-status" role="status">
           加载中…
@@ -27,9 +27,9 @@
             <span>A</span><span>K</span>
           </div>
           <span>Acey &amp; Kiyoshi</span>
-          <NuxtLink to="/our-story">
+          <RouterLink to="/our-story">
             Our story<ArrowUpRight :size="16" />
-          </NuxtLink>
+          </RouterLink>
         </div>
       </section>
       <MusicPlayer name="暗號" artist="Jay Chou" url="/music.mp3" cover="/cover.webp" />
@@ -37,8 +37,26 @@
   </section>
 </template>
 <script lang="ts" setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import MusicPlayer from '../components/MusicPlayer.vue'
+
 import { ArrowUpRight, Quote } from '@lucide/vue'
-const { data: hitokoto, pending: hitokotoPending } = useLazyFetch<Hitokoto>('/api/v1/hitokoto')
+const hitokoto = ref<{ Data: { Content: string, User: { Name: string } } } | null>(null)
+const hitokotoPending = ref(true)
+const controller = new AbortController()
+onBeforeUnmount(() => controller.abort())
+onMounted(async () => {
+  try {
+    const response = await fetch('/api/v1/hitokoto', { cache: 'no-store', signal: controller.signal })
+    if (!response.ok) { return }
+    const result = await response.json()
+    if (typeof result.Data?.Content === 'string' && typeof result.Data.User?.Name === 'string') {
+      hitokoto.value = result
+    }
+  } catch { /* Keep the existing unavailable state when the request fails. */ }
+  finally { hitokotoPending.value = false }
+})
 </script>
 <style scoped>
 .home-page { max-width: 880px; margin: 0 auto; }

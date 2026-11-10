@@ -9,6 +9,10 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
+import AppNavbar from '../components/AppNavbar.vue'
+import AppNavigation from '../components/AppNavigation.vue'
+
 const route = useRoute()
 </script>
 
@@ -18,6 +22,6 @@ const route = useRoute()
 @media (max-width: 767px) {
   .app-shell { height: 100dvh; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
   .app-content { grid-row: 2; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; padding: 28px 20px; }
-  .app-content :deep(input), .app-content :deep(select), .app-content :deep(textarea) { font-size: 16px; min-width: 0; max-width: 100%; }
+  .app-shell .app-content :deep(input), .app-shell .app-content :deep(select), .app-shell .app-content :deep(textarea) { font-size: 16px; min-width: 0; max-width: 100%; }
 }
 </style>

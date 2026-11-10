@@ -4,13 +4,13 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright')
-const root = new URL('../.output/public/', import.meta.url)
+const root = new URL(process.env.CLIENT_OUTPUT || '../dist/', import.meta.url)
 const examples = ['今天也想和你一起吃晚饭。', '把平凡的小事记下来，回头看的时候，原来已经一起走了这么远。', '周末的计划：睡个懒觉，再慢慢出门。', '下次还要一起去海边。']
 const entries = Array.from({ length: 20 }, (_, i) => ({ ID: i + 1, Content: examples[i % examples.length], CreatedAt: '2026-09-09T00:00:00Z', User: { ID: i % 2 ? 1 : 2, Name: i % 2 ? 'Kiyoshi Guo' : 'Acey Tong' } }))
 
 // Substitute known insets only in fixture CSS: desktop engines have no iPhone Home indicator.
-for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
-  const browser = await launcher.launch(engine === 'chromium' ? { channel: 'chrome' } : {})
+for (const [engine, launcher] of Object.entries({ chromium, webkit }).filter(([engine]) => !process.env.BROWSER || engine === process.env.BROWSER)) {
+  const browser = await launcher.launch(engine === 'chromium' && process.env.CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.CHROMIUM_EXECUTABLE_PATH } : {})
   try {
     for (const [width, height, top, bottom, side] of [[320, 700, 0, 0, 0], [390, 844, 47, 34, 0], [430, 932, 59, 34, 0], [740, 390, 0, 21, 44], [768, 900, 0, 0, 0], [1024, 768, 0, 0, 0], [1440, 900, 0, 0, 0], [1920, 1080, 0, 0, 0]]) {
       const desktop = width >= 768
@@ -57,6 +57,11 @@ for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
       assert.equal(await page.locator('.filters').isVisible(), true)
       assert.equal(await page.locator('.filters').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length), desktop ? 4 : 2)
       assert.equal(await page.locator('.app-content').evaluate(el => el.scrollWidth <= el.clientWidth), true)
+      if (!desktop) {
+        assert.equal(await page.locator('.app-content input, .app-content select, .app-content textarea').evaluateAll(elements =>
+          elements.filter(el => el.getClientRects().length).every(el => parseFloat(getComputedStyle(el).fontSize) >= 16)
+        ), true, 'phone inputs must not trigger iOS focus zoom')
+      }
       await page.getByRole('button', { name: '筛选条件', exact: true }).click()
       assert.ok(result.scrollWidth <= result.clientWidth)
       for (const link of result.links) {

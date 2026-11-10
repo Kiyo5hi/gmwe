@@ -1,8 +1,14 @@
 <template>
-  <NuxtLayout>
-    <NuxtPage />
-  </NuxtLayout>
+  <AppLayout>
+    <p v-if="navigationError" class="text-error navigation-error" role="alert">{{ navigationError }}</p>
+    <RouterView />
+  </AppLayout>
 </template>
+<script setup lang="ts">
+import { RouterView } from 'vue-router'
+import AppLayout from './layouts/default.vue'
+import { navigationError } from './router'
+</script>
 <style>
 :root { --ink: #262c30; --muted: #737b80; --accent: #23775f; --line: #e4e8e5; --surface: #ffffff; --wash: #f6f8f7; --tint: #edf5f1; }
 html[data-theme=dark] { --ink: #e4e8e6; --muted: #979fa3; --accent: #8bcdb5; --line: #343a3d; --surface: #202528; --wash: #1a1e21; --tint: #293c35; }

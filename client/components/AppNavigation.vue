@@ -1,11 +1,13 @@
 <template>
-  <nav class="app-navigation bg-base-100" aria-label="主导航">
-    <NuxtLink v-for="item in items" :key="item.path" :to="item.path" :aria-current="active(item.path) ? 'page' : undefined" :class="{ selected: active(item.path) }">
+  <nav class="app-navigation" aria-label="主导航">
+    <RouterLink v-for="item in items" :key="item.path" :to="item.path" :aria-current="active(item.path) ? 'page' : undefined" :class="{ selected: active(item.path) }">
       <component :is="item.icon" :size="22" aria-hidden="true" /><span>{{ item.label }}</span>
-    </NuxtLink>
+    </RouterLink>
   </nav>
 </template>
 <script setup lang="ts">
+import { RouterLink, useRoute } from 'vue-router'
+
 import { BookOpen, House, Quote, UserRound } from '@lucide/vue'
 const route = useRoute()
 const items = [{ path: '/', label: 'Home', icon: House }, { path: '/hitokoto', label: 'Hitokoto', icon: Quote }, { path: '/our-story', label: 'Story', icon: BookOpen }, { path: '/account', label: 'Account', icon: UserRound }]

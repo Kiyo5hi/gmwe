@@ -23,6 +23,8 @@
   </section>
 </template>
 <script setup lang="ts">
+import { onBeforeUnmount, ref } from 'vue'
+
 import { Pause, Play } from '@lucide/vue'
 defineProps<{ name: string, artist: string, url: string, cover: string }>()
 const audio = ref<HTMLAudioElement | null>(null)

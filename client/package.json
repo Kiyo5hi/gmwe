@@ -1,39 +1,30 @@
 {
   "private": true,
+  "type": "module",
   "packageManager": "npm@11.19.1",
-  "scripts": {
-    "pregenerate": "node scripts/pwa-icons.mjs",
-    "prebuild": "node scripts/pwa-icons.mjs",
-    "predev": "node scripts/pwa-icons.mjs",
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "lint": "eslint --fix --ext .ts,.js,.vue ."
+  "engines": {
+    "node": ">=24"
   },
-  "devDependencies": {
-    "@nuxtjs/eslint-config-typescript": "^12.0.0",
-    "@nuxtjs/tailwindcss": "^6.2.0",
-    "eslint": "^8.31.0",
-    "nuxt": "4.6.4",
-    "sharp": "0.35.5",
-    "typescript": "^4.9.4"
+  "scripts": {
+    "predev": "node scripts/pwa-icons.mjs",
+    "prebuild": "node scripts/pwa-icons.mjs",
+    "dev": "vite --host 127.0.0.1 --port 3000",
+    "check": "vue-tsc --noEmit",
+    "build": "vite build && node scripts/route-pages.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:browser": "node scripts/check-startup.mjs && node scripts/check-mobile-layout.mjs && node scripts/check-interactions.mjs"
   },
   "dependencies": {
     "@lucide/vue": "1.43.0",
-    "daisyui": "^2.46.0",
-    "theme-change": "^2.2.0"
+    "vue": "3.5.45",
+    "vue-router": "5.4.0"
   },
-  "overrides": {
-    "@typescript-eslint/typescript-estree": {
-      "minimatch": "^11.0.5"
-    },
-    "@vercel/nft": {
-      "glob": "^14.0.4"
-    },
-    "archiver": {
-      "readdir-glob": "^4.0.0"
-    }
+  "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.10",
+    "playwright": "1.65.0",
+    "sharp": "0.35.5",
+    "typescript": "6.0.3",
+    "vite": "8.3.7",
+    "vue-tsc": "3.3.14"
   }
 }

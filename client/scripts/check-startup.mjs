@@ -4,9 +4,9 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright')
-const root = new URL('../.output/public/', import.meta.url)
-for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
-  const browser = await launcher.launch(engine === 'chromium' ? { channel: 'chrome' } : {})
+const root = new URL(process.env.CLIENT_OUTPUT || '../dist/', import.meta.url)
+for (const [engine, launcher] of Object.entries({ chromium, webkit }).filter(([engine]) => !process.env.BROWSER || engine === process.env.BROWSER)) {
+  const browser = await launcher.launch(engine === 'chromium' && process.env.CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.CHROMIUM_EXECUTABLE_PATH } : {})
   let release
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true })

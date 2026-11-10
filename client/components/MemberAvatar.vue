@@ -5,6 +5,8 @@
   </span>
 </template>
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+
 const props = defineProps<{ userId?: number, name: string }>()
 const failed = ref(false)
 watch(() => props.userId, () => { failed.value = false })

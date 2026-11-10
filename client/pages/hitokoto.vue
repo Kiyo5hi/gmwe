@@ -100,8 +100,12 @@
   </section>
 </template>
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import EntryComposer from '../components/EntryComposer.vue'
+import MemberAvatar from '../components/MemberAvatar.vue'
+
 import { ChevronLeft, ChevronRight, Filter, Plus, RotateCcw, Search, SlidersHorizontal, X } from '@lucide/vue'
-type Entry = { ID: number, Content: string, CreatedAt: string, User: { Name: string } }
+type Entry = { ID: number, Content: string, CreatedAt: string, User: { ID: number, Name: string } }
 const entries = ref<Entry[]>([])
 const total = ref(0)
 const page = ref(1)
@@ -122,7 +126,6 @@ const filterOpen = ref(false)
 const composerLoaded = ref(false)
 watch(composing, (open) => { if (open) { composerLoaded.value = true } })
 let request = 0
-useHead({ title: 'Hitokoto | GMWE' })
 const formatDate = (value: string) => new Date(value).toLocaleDateString('zh-CN')
 onMounted(() => loadPage(1))
 onMounted(async () => {

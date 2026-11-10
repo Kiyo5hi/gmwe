@@ -9,8 +9,31 @@ env:
   IMAGE_NAME: kiyo5hi/gmwe
 
 jobs:
+  client:
+    name: Validate static client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.2'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Build and check types
+        working-directory: client
+        run: npm ci && npm run check && npm run build
+      - name: Install browser engines
+        working-directory: client
+        run: npx playwright install --with-deps chromium webkit
+      - name: Check navigation, writes and mobile layouts
+        working-directory: client
+        run: npm run test:browser
+
   build-and-push-image:
     name: Build and Push to ghcr.io
+    needs: client
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,6 +43,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

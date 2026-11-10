@@ -2,3 +2,8 @@ client/node_modules
 client/.output
 client/.nuxt
 client/dist
+
+.git
+.github
+**/*.log
+**/test-results

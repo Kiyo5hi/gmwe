@@ -50,6 +50,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+
 type Account = { user: { name: string, subject: string, user_id: number }, csrf: string }
 type Member = { ID: number, Name: string }
 type Entry = { ID: number, Content: string, User: Member }

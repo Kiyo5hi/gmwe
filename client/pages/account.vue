@@ -29,15 +29,17 @@
   </section>
 </template>
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import MemberAvatar from '../components/MemberAvatar.vue'
+
 import { LogOut } from '@lucide/vue'
 type Account = { user: { name: string, subject: string, user_id: number }, profile?: { first_name: string, last_name: string, loaded: boolean, state?: string }, csrf: string }
 const account = ref<Account | null>(null)
-const fullName = computed(() => [account.value?.profile?.first_name, account.value?.profile?.last_name].filter(Boolean).join(' ') || account.value?.user.name)
+const fullName = computed(() => [account.value?.profile?.first_name, account.value?.profile?.last_name].filter(Boolean).join(' ') || account.value?.user.name || '')
 const loading = ref(true)
 const busy = ref(false)
 const expired = ref(false)
 const error = ref('')
-useHead({ title: 'Account | GMWE' })
 onMounted(async () => {
   try {
     const response = await fetch('/api/auth/me', { cache: 'no-store' })

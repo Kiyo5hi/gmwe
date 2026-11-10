@@ -11,7 +11,6 @@
 </template>
 
 <script lang="ts" setup>
-useHead({ title: 'Story | GMWE' })
 const events = [{
   date: '2022-06-18',
   event: '初识'

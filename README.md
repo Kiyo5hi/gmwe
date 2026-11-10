@@ -11,8 +11,7 @@ The player loads audio only on request and pauses when its view is left.
 Light/dark colors are shared across controls and pages. Account shows the
 member's name, not the identity provider brand.
 
-After generating the client, run `node scripts/check-mobile-layout.mjs` and
-`node scripts/check-startup.mjs` from `client/`. Set `PLAYWRIGHT_MODULE` when
+After building the client, run `npm run test:browser` from `client/`. Set `PLAYWRIGHT_MODULE` when
 Playwright is installed outside this project. The layout fixture covers Chromium
 and WebKit at 320-1920px, including simulated iPhone insets, all four views,
 collapsed/expanded filters and Account navigation.
@@ -55,8 +54,8 @@ main file of a running database. Protect backup files and their parent directory
 
 Build with `docker build -f deploy/Dockerfile .`; the API build runs
 `go test ./api/...` and includes the C compiler needed by the official GORM
-SQLite driver. The static Nuxt 3 client uses Node 24 and npm 11.19.1;
-run `npm ci` followed by `npm run generate` in `client/`. Commit
+SQLite driver. The static Vue/Vite client uses native CSS, Node 24 and npm 11.19.1;
+run `npm ci`, `npm run check` and `npm run build` in `client/`. Commit
 `package-lock.json` with dependency changes. Do not regenerate a separate pnpm
 lockfile: production and local builds use the same npm lock.
 

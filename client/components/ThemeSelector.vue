@@ -4,6 +4,8 @@
   </button>
 </template>
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+
 import { Moon, Sun } from '@lucide/vue'
 const dark = ref(false)
 function apply (value: boolean) { dark.value = value; document.documentElement.dataset.theme = value ? 'dark' : 'light' }
